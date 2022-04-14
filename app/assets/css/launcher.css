@@ -1,6 +1,10 @@
 /* Github Code Highlighting. */
 @import "../../../node_modules/github-syntax-dark/lib/github-dark.css";
 
+.hidden-elm {
+  display: none !important;
+}
+
 /*******************************************************************************
  *                                                                             *
  * Fonts                                                                       *
@@ -9,17 +13,45 @@
 
 @font-face {
     font-family: 'Avenir Book';
-    src: url('../fonts/Avenir-Book.ttf');
+    /*src: url('../fonts/Avenir-Book.ttf');*/
+    /*src: url('../fonts/UASquared-Regular.ttf');*/
+    src: url('../fonts/Oxanium-Regular.ttf');
 }
 
 @font-face {
     font-family: 'Avenir Medium';
-    src: url('../fonts/Avenir-Medium.ttf');
+    /*src: url('../fonts/Avenir-Medium.ttf');*/
+    /*src: url('../fonts/UASquared-Regular.ttf');*/
+    src: url('../fonts/Oxanium-Regular.ttf');
 }
 
 @font-face {
     font-family: 'Ringbearer';
     src: url('../fonts/Ringbearer.ttf');
+}
+
+@font-face {
+    font-family: 'UASquared Regular';
+    src: url('../fonts/UASquared-Regular.ttf');
+}
+
+@font-face {
+    font-family: 'Acknowtt';
+    src: url('../fonts/acknowtt.ttf');
+}
+
+@font-face {
+    font-family: 'Oxanium Regular';
+    src: url('../fonts/Oxanium-Regular.ttf');
+}
+
+.fontPrimary {
+  /*font-family: 'UASquared Regular' !important;*/
+  font-family: 'Oxanium Regular' !important;
+}
+
+.fontSecondary {
+  font-family: 'Acknowtt' !important;
 }
 
 /*******************************************************************************
@@ -42,8 +74,14 @@ p {
 
 /* Set default font and color. */
 body, button {
-    font-family: 'Avenir Book';
+    /*font-family: 'Avenir Book';*/
+    font-size: 18px;
     color: white;
+}
+
+body {
+  /*font-family: 'UASquared Regular';*/
+  font-family: 'Oxanium Regular';
 }
 
 /*body {
@@ -109,7 +147,7 @@ body, button {
     padding: 0px 10px;
 }
 #frameTitleText {
-    font-size: 14px;
+    font-size: 15px !important;
     font-family: 'Avenir Medium';
     letter-spacing: 0.5px;
 }
@@ -222,7 +260,6 @@ body, button {
     align-items: center;
     height: 100%;
     width: 100%;
-    background: rgba(0, 0, 0, 0.50);
 }
 
 #welcomeContent {
@@ -230,9 +267,15 @@ body, button {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    width: 50%;
-    top: -10%;
+    width: 27%;
+    /*top: -15%;*/
     position: relative;
+    background-color: #141921;
+    padding: 5px 8px 5px 8px;
+    padding-bottom: 55px;
+    opacity: .85;
+    margin: auto;
+    border: 15px solid #1c232e;
 }
 
 /*
@@ -272,31 +315,46 @@ body, button {
 }
 */
 
+@keyframes bounce {
+  from {
+    transform: translateY(0px);
+  }
+  to {
+    transform: translateY(-11px);
+  }
+}
+@-webkit-keyframes bounce {
+  from {
+    transform: translateY(0px);
+  }
+  to {
+    transform: translateY(-11px);
+  }
+}
+
 #welcomeImageSeal {
     border-radius: 50%;
     border: 2px solid #cad7e1;
     background: rgba(1, 2, 1, 0.5);
-    height: 125px;
-    width: 125px;
+    height: 150px;
+    width: 150px;
     box-shadow: 0px 0px 10px 0px rgb(0, 0, 0);
-    margin-bottom: 5%;
-    margin-top: 10%;
+    /*margin-bottom: 20%;*/
+    /*margin-top: -15%;*/
 }
 
-#welcomeHeader {
-    font-family: 'Avenir Medium';
-    text-align: center;
-    color: white;
-    margin-bottom: 25px;
-    letter-spacing: 1px;
-    font-size: 20px;
-    text-shadow: white 0px 0px 0px;
+#welcomeImage {
+  height: 220px;
+  width: 220px;
+  margin-top: -15%;
+  animation: bounce 1s infinite alternate;
+  -webkit-animation: bounce 1s infinite alternate;
 }
 
 #welcomeDescription {
-    text-align: justify;
     font-size: 13px;
     font-weight: 100;
+    text-align: center;
     text-shadow: rgba(255, 255, 255, 0.75) 0px 0px 20px
 }
 
@@ -313,13 +371,13 @@ body, button {
     font-weight: bold;
     letter-spacing: 2px;
     border: none;
-    padding: 15px 5px;
-    margin: 10px 0px;
+    /*padding: 15px 5px;*/
+
     cursor: pointer;
     position: relative;
     right: -20px;
     transition: 0.5s ease;
-    margin-top: 5%;
+
     margin-bottom: -5%;
 }
 #welcomeButton:disabled {
@@ -374,6 +432,18 @@ body, button {
     font-size: 12px;
     color: #848484;
     font-weight: bold;
+    display: flex;
+    align-items: center;
+}
+
+.loginSpanDim a {
+    display: flex;
+    align-items: center;
+    margin-left: 5px;
+}
+
+.loginSpanDim a img {
+    margin-left: 5px;
 }
 
 /* Main login container. */
@@ -486,22 +556,59 @@ body, button {
 
 /* Logo on login form. */
 #loginImageSeal {
-    border-radius: 50%;
-    border: 2px solid #cad7e1;
-    background: rgba(1, 2, 1, 0.5);
-    height: 125px;
-    width: 125px;
-    box-shadow: 0px 0px 10px 0px rgb(0, 0, 0);
-    margin-bottom: 20px;
+    height: 170px;
+    width: 170px;
+    margin-bottom: 15px;
 }
 
 /* Header on login view. */
 #loginSubheader {
-    font-family: 'Avenir Medium';
-    margin-bottom: 25px;
-    font-size: 12px;
+    /*font-family: 'UASquared Regular';*/
+    font-family: 'Oxanium Regular';
+    margin-bottom: 15px;
+    font-size: 17px;
     letter-spacing: 1px;
     font-weight: bold;
+}
+
+/* Microsoft login button. */
+#loginMSButton {
+    width: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px !important;
+    background-color: #0068ff !important;
+    outline: none;
+    color: whitesmoke !important;
+    padding: 10px;
+    border: 1.5px solid #00aaff !important;
+    transition: background-color 300ms;
+    margin-bottom: 10px !important;
+}
+
+#loginMSButton:hover {
+    background-color: #0060ec !important;
+    cursor: pointer;
+}
+
+#loginMSButton img {
+    margin-right: 5px;
+    margin-top: 2px;
+}
+
+#loginMSButton .microsoft {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    margin-left: 5px;
+}
+
+#loginMSButton .fontPrimary {
+    margin-top: 4px;
+    font-size: 15px;
 }
 
 /* Container to organize login field elements. */
@@ -511,18 +618,22 @@ body, button {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    width: 50%;
+    text-align: left;
 }
 
-/* SVG icons on the login view. */
-.loginSVG {
-    fill: #fff;
-    height: 20px;
-    width: 20px;
+/* Span which displays label for login field. */
+.loginLabelSpan {
+    width: 100%;
+    font-size: 16px;
+    font-family: 'Avenir Book';
+    font-weight: bold;
 }
 
 /* Span which displays errors related to login field content. */
 .loginErrorSpan {
-    font-family: 'Avenir Medium';
+    /*font-family: 'UASquared Regular';*/
+    font-family: 'Oxanium Regular';
     font-weight: bold;
     font-size: 8px;
     color: #ff1b0c;
@@ -542,15 +653,15 @@ body, button {
     10%, 90% {
         transform: translate3d(-1px, 0, 0);
     }
-    
+
     20%, 80% {
         transform: translate3d(2px, 0, 0);
     }
-  
+
     30%, 50%, 70% {
         transform: translate3d(-4px, 0, 0);
     }
-  
+
     40%, 60% {
         transform: translate3d(4px, 0, 0);
     }
@@ -560,18 +671,18 @@ body, button {
 .loginField {
     font-family: 'Avenir Book';
     background: none;
-    border-width: 1.5px 0px 0px 0px;
+    border-width: 1.5px;
     border-style: solid;
     width: 250px;
     margin-bottom: 20px;
     border-color: #fff;
     color: rgba(255, 255, 255, 0.75);
     font-weight: bold;
-    text-align: center;
     box-sizing: border-box;
     padding: 7.5px;
-    font-size: 10px;
+    font-size: 15px;
     letter-spacing: 1px;
+    width: 100%;
 }
 .loginField:focus {
     outline: none;
@@ -585,6 +696,9 @@ body, button {
     letter-spacing: 1px;
     text-align: center;
     font-weight: bold;
+    /*font-family: 'UASquared Regular';*/
+    font-family: 'Oxanium Regular';
+    font-size: 17px;
 }
 .loginField:focus::-webkit-input-placeholder {
     color: transparent;
@@ -777,6 +891,7 @@ body, button {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    margin-left: -10px;
 }
 
 /* Add spacing between register anchor and disclaimer. */
@@ -786,7 +901,7 @@ body, button {
 
 /* Disclaimer text styles. */
 .loginDisclaimerText {
-    font-size: 7px;
+    font-size: 10px;
     color: #848484;
     font-weight: bold;
     text-align: center;
@@ -873,174 +988,6 @@ body, button {
 }
 */
 
-/*******************************************************************************
- *                                                                             *
- * Waiting View (waiting.ejs)                                                  *
- *                                                                             *
- ******************************************************************************/
-
-#waitingContainer {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    width: 100%;
-    transition: filter 0.25s ease;
-    background: rgba(0, 0, 0, 0.50);
-}
-
-#waitingContent {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 50%;
-    top: -10%;
-    position: relative;
-}
-
-.waitingSpinner:before {
-    transform: rotateX(60deg) rotateY(45deg) rotateZ(45deg);
-    animation: 750ms rotateBefore infinite linear reverse;
-}
-.waitingSpinner:after {
-    transform: rotateX(240deg) rotateY(45deg) rotateZ(45deg);
-    animation: 750ms rotateAfter infinite linear;
-}
-.waitingSpinner:before,
-.waitingSpinner:after {
-    box-sizing: border-box;
-    content: '';
-    display: block;
-    position: fixed;
-    top: calc(50% - 5em);
-    /* left: 50%; */
-    margin-top: -5em;
-    margin-left: -5em;
-    width: 10em;
-    height: 10em;
-    transform-style: preserve-3d;
-    transform-origin: 50%;
-    transform: rotateY(50%);
-    perspective-origin: 50% 50%;
-    perspective: 340px;
-    background-size: 10em 10em;
-    background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cjxzdmcgd2lkdGg9IjI2NnB4IiBoZWlnaHQ9IjI5N3B4IiB2aWV3Qm94PSIwIDAgMjY2IDI5NyIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4bWxuczpza2V0Y2g9Imh0dHA6Ly93d3cuYm9oZW1pYW5jb2RpbmcuY29tL3NrZXRjaC9ucyI+CiAgICA8dGl0bGU+c3Bpbm5lcjwvdGl0bGU+CiAgICA8ZGVzY3JpcHRpb24+Q3JlYXRlZCB3aXRoIFNrZXRjaCAoaHR0cDovL3d3dy5ib2hlbWlhbmNvZGluZy5jb20vc2tldGNoKTwvZGVzY3JpcHRpb24+CiAgICA8ZGVmcz48L2RlZnM+CiAgICA8ZyBpZD0iUGFnZS0xIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIiBza2V0Y2g6dHlwZT0iTVNQYWdlIj4KICAgICAgICA8cGF0aCBkPSJNMTcxLjUwNzgxMywzLjI1MDAwMDM4IEMyMjYuMjA4MTgzLDEyLjg1NzcxMTEgMjk3LjExMjcyMiw3MS40OTEyODIzIDI1MC44OTU1OTksMTA4LjQxMDE1NSBDMjE2LjU4MjAyNCwxMzUuODIwMzEgMTg2LjUyODQwNSw5Ny4wNjI0OTY0IDE1Ni44MDA3NzQsODUuNzczNDM0NiBDMTI3LjA3MzE0Myw3NC40ODQzNzIxIDc2Ljg4ODQ2MzIsODQuMjE2MTQ2MiA2MC4xMjg5MDY1LDEwOC40MTAxNTMgQy0xNS45ODA0Njg1LDIxOC4yODEyNDcgMTQ1LjI3NzM0NCwyOTYuNjY3OTY4IDE0NS4yNzczNDQsMjk2LjY2Nzk2OCBDMTQ1LjI3NzM0NCwyOTYuNjY3OTY4IC0yNS40NDkyMTg3LDI1Ny4yNDIxOTggMy4zOTg0Mzc1LDEwOC40MTAxNTUgQzE2LjMwNzA2NjEsNDEuODExNDE3NCA4NC43Mjc1ODI5LC0xMS45OTIyOTg1IDE3MS41MDc4MTMsMy4yNTAwMDAzOCBaIiBpZD0iUGF0aC0xIiBmaWxsPSIjZmZmZmZmIiBza2V0Y2g6dHlwZT0iTVNTaGFwZUdyb3VwIj48L3BhdGg+CiAgICA8L2c+Cjwvc3ZnPg==);
-}
-
-#waitingTextContainer {
-    position: fixed;
-    top: 50%;
-}
-
-@keyframes rotateBefore {
-    from {
-      transform: rotateX(60deg) rotateY(45deg) rotateZ(0deg);
-    }
-    to {
-      transform: rotateX(60deg) rotateY(45deg) rotateZ(-360deg);
-    }
-}
-
-@keyframes rotateAfter {
-    from {
-      transform: rotateX(240deg) rotateY(45deg) rotateZ(0deg);
-    }
-    to {
-      transform: rotateX(240deg) rotateY(45deg) rotateZ(360deg);
-    }
-}
-
-/*******************************************************************************
- *                                                                             *
- * Login Options View (loginOptions.ejs)                                       *
- *                                                                             *
- ******************************************************************************/
-
-#loginOptionsContainer {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    width: 100%;
-    transition: filter 0.25s ease;
-    background: rgba(0, 0, 0, 0.50);
-}
-
-#loginOptionsContent {
-    border-radius: 3px;
-    position: relative;
-    top: -5%;
-}
-
-.loginOptionsMainContent {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.loginOptionActions {
-    display: flex;
-    flex-direction: column;
-    row-gap: 10px;
-}
-
-.loginOptionButtonContainer {
-    width: 16em;
-}
-
-.loginOptionButton {
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px solid rgba(126, 126, 126, 0.57);
-    border-radius: 3px;
-    height: 50px;
-    width: 100%;
-    text-align: left;
-    padding: 0px 25px;
-    cursor: pointer;
-    outline: none;
-    transition: 0.25s ease;
-    display: flex;
-    align-items: center;
-    column-gap: 5px;
-}
-.loginOptionButton:hover,
-.loginOptionButton:focus {
-    background: rgba(54, 54, 54, 0.25);
-    text-shadow: 0px 0px 20px white;
-}
-
-#loginOptionCancelContainer {
-    position: absolute;
-    bottom: -100px;
-}
-
-#loginOptionCancelButton {
-    background: none;
-    border: none;
-    padding: 2px 0px;
-    font-size: 16px;
-    font-weight: bold;
-    color: lightgrey;
-    cursor: pointer;
-    outline: none;
-    transition: 0.25s ease;
-}
-#loginOptionCancelButton:hover,
-#loginOptionCancelButton:focus {
-    text-shadow: 0px 0px 20px lightgrey;
-}
-#loginOptionCancelButton:active {
-    text-shadow: 0px 0px 20px rgba(211, 211, 211, 0.75);
-    color: rgba(211, 211, 211, 0.75);
-}
-#loginOptionCancelButton:disabled {
-    color: rgba(211, 211, 211, 0.75);
-    pointer-events: none;
-}
-
 
 /*******************************************************************************
  *                                                                             *
@@ -1123,6 +1070,9 @@ body, button {
     cursor: pointer;
     outline: none;
     transition: 0.25s ease;
+    /*font-family: 'UASquared Regular';*/
+    font-family: 'Oxanium Regular';
+    font-size: 22px;
 }
 .settingsNavItem:hover,
 .settingsNavItem:focus {
@@ -1166,6 +1116,9 @@ body, button {
     cursor: pointer;
     outline: none;
     transition: 0.25s ease;
+    /*font-family: 'UASquared Regular';*/
+    font-family: 'Oxanium Regular';
+    font-size: 20px;
 }
 #settingsNavDone:hover,
 #settingsNavDone:focus {
@@ -1269,7 +1222,8 @@ body, button {
 }
 .settingsFieldTitle {
     font-size: 14px;
-    font-family: 'Avenir Medium';
+    /*font-family: 'UASquared Regular';*/
+    font-family: 'Oxanium Regular';
     color: rgba(255, 255, 255, 0.95);
 }
 .settingsFieldDesc {
@@ -1426,7 +1380,7 @@ input:checked + .toggleSwitchSlider:before {
 
 /* Description for the file selector. */
 .settingsFileSelDesc {
-    font-size: 10px;
+    font-size: 14px;
     margin: 20px 0px;
     color: lightgrey;
     width: 89%;
@@ -1439,65 +1393,50 @@ input:checked + .toggleSwitchSlider:before {
 * Settings View (Account Tab)
 * * */
 
-.settingsAuthAccountTypeContainer {
-    display: flex;
+/* Add account button styles. */
+#settingsAddAccount {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(126, 126, 126, 0.57);
+    border-radius: 3px;
+    height: 50px;
     width: 75%;
-    flex-direction: column;
-}
-
-.settingsAuthAccountTypeHeader {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    justify-content: space-between;
-    padding: 10px 0px;
-    border-bottom: 1px solid #ffffff85;
-    margin-bottom: 30px;
-}
-
-.settingsAuthAccountTypeHeaderLeft {
-    display: flex;
-    column-gap: 5px;
-}
-
-/* Settings add account button styles. */
-.settingsAddAuthAccount {
-    background: none;
-    border: none;
     text-align: left;
-    padding: 2px 0px;
-    color: white;
+    padding: 0px 50px;
     cursor: pointer;
     outline: none;
     transition: 0.25s ease;
 }
-.settingsAddAuthAccount:hover,
-.settingsAddAuthAccount:focus {
-    text-shadow: 0px 0px 20px white, 0px 0px 20px white, 0px 0px 20px white;
+#settingsAddAccount:hover,
+#settingsAddAccount:focus {
+    background: rgba(54, 54, 54, 0.25);
+    text-shadow: 0px 0px 20px white;
 }
-.settingsAddAuthAccount:active {
-    text-shadow: 0px 0px 20px rgba(255, 255, 255, 0.75), 0px 0px 20px rgba(255, 255, 255, 0.75), 0px 0px 20px rgba(255, 255, 255, 0.75);
-    color: rgba(255, 255, 255, 0.75);
-}
-.settingsAddAuthAccount:disabled {
-    color: rgba(255, 255, 255, 0.75);
-    pointer-events: none;
+
+/* Settings auth accounts header. */
+#settingsCurrentAccountsHeader {
+    margin: 20px 0px;
 }
 
 /* Auth account list container styles. */
-.settingsCurrentAccounts {
+#settingsCurrentAccounts {
     margin-bottom: 5%;
 }
-.settingsCurrentAccounts > .settingsAuthAccount:not(:last-child) {
+#settingsCurrentAccounts > .settingsAuthAccount:not(:last-child) {
     margin-bottom: 10px;
 }
-.settingsCurrentAccounts > .settingsAuthAccount:not(:first-child) {
+#settingsCurrentAccounts > .settingsAuthAccount:not(:first-child) {
     margin-top: 10px;
+}
+
+#settingsAddAccountText {
+  /*font-family: 'UASquared Regular';*/
+  font-family: 'Oxanium Regular';
 }
 
 /* Auth account shared styles. */
 .settingsAuthAccount {
     display: flex;
+    width: 75%;
     background: rgba(0, 0, 0, 0.25);
     border-radius: 3px;
     border: 1px solid rgba(126, 126, 126, 0.57);
@@ -1701,6 +1640,7 @@ input:checked + .toggleSwitchSlider:before {
     padding-bottom: 10px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.5);
     margin-bottom: 10px;
+    font-size: 19px;
 }
 
 /* Mod elements sub-containers. */
@@ -1714,7 +1654,7 @@ input:checked + .toggleSwitchSlider:before {
 #settingsReqModsContent,
 #settingsOptModsContent,
 #settingsDropinModsContent {
-    font-size: 12px;
+    font-size: 20px;
     background: rgba(0, 0, 0, 0.25);
     border-radius: 3px;
     color: white;
@@ -1813,6 +1753,8 @@ input:checked + .toggleSwitchSlider:before {
     outline: none;
     transition: 0.25s ease;
     margin-bottom: 10px;
+    /*font-family: 'UASquared Regular';*/
+    font-family: 'Oxanium Regular';
 }
 #settingsDropinFileSystemButton:hover,
 #settingsDropinFileSystemButton:focus,
@@ -1850,7 +1792,7 @@ input:checked + .toggleSwitchSlider:before {
 
 /* Shaderpack settings description. */
 #settingsShaderpackDesc {
-    font-size: 10px;
+    font-size: 16px;
     margin: 10px 0px;
     color: lightgrey;
     font-weight: bold;
@@ -2069,7 +2011,7 @@ input:checked + .toggleSwitchSlider:before {
 
 /* Description for memory management. */
 #settingsMemoryDesc {
-    font-size: 10px;
+    font-size: 15px;
     margin: 20px 0px;
     color: lightgrey;
     font-weight: bold;
@@ -2079,7 +2021,7 @@ input:checked + .toggleSwitchSlider:before {
 #settingsJavaExecDetails {
     font-weight: bold;
     color: grey;
-    font-size: 12px;
+    font-size: 15px;
 }
 
 /* Main container for the JVM options setting. */
@@ -2111,7 +2053,7 @@ input:checked + .toggleSwitchSlider:before {
 
 /* Description for the JVM options setting. */
 #settingsJVMOptsDesc {
-    font-size: 10px;
+    font-size: 14px;
     margin: 20px 0px;
     color: lightgrey;
     font-weight: bold;
@@ -2462,19 +2404,20 @@ input:checked + .toggleSwitchSlider:before {
     display: flex;
 }
 #landingContainer > #upper > #left {
-    display: inline-flex;
+    display: flex;
+    flex-direction: column;
     width: 15%;
     height: 100%;
-    justify-content: flex-end;
 }
 #landingContainer > #upper > #content {
-    display: inline-flex;
+    display: flex;
+    justify-content: center;
     width: 70%;
     height: 100%;
 }
 #landingContainer > #upper > #right {
-    display: inline-flex;
-    width: 15%;
+    display: flex;
+    flex-direction: column;
     height: 100%;
 }
 
@@ -2485,20 +2428,18 @@ input:checked + .toggleSwitchSlider:before {
     background: linear-gradient(to top, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
 }
 #landingContainer > #lower > #left {
-    position: relative;
     transition: top 2s ease;
     top: 0px;
     height: 100%;
     width: 33%;
-    display: inline-flex;
-    justify-content: center;
+    position: relative;
 }
 #landingContainer > #lower > #left #content {
     position: relative;
     top: 25px;
     display: inline-flex;
     line-height: 24px;
-    left: 50px;
+    left: 42.5px;
 }
 #landingContainer > #lower > #center {
     position: relative;
@@ -2516,12 +2457,11 @@ input:checked + .toggleSwitchSlider:before {
     top: 10px;
 }
 #landingContainer > #lower > #right {
-    position: relative;
     transition: top 2s ease;
     top: 0px;
     height: 100%;
     width: 33%;
-    display: inline-flex;
+    position: relative;
 }
 
 /*******************************************************************************
@@ -2855,19 +2795,13 @@ input:checked + .toggleSwitchSlider:before {
 
 /* Logo image. */
 #image_seal {
-    height: 70px;
-    width: auto;
     position: relative;
-    border: 2px solid white;
-    box-sizing: border-box;
-    border-radius: 50%;
+    right: 5px;
+    width: 210px;
 }
 
 /* Logo container styles. */
 #image_seal_container {
-    position: relative;
-    height: 70px;
-    width: 70px;
     border-radius: 50%;
     margin-top: 50px;
 }
@@ -2930,6 +2864,147 @@ input:checked + .toggleSwitchSlider:before {
     transition-delay: 0s;
 }
 
+/* Donator styles */
+#donatorsContent {
+    display: none;
+    position: relative;
+    left: 32.5px;
+    width: 220px;
+    margin: 5px 0 5px 0;
+}
+
+#donatorsContent a {
+    text-decoration: none;
+}
+
+#donatorsTitle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 200px !important;
+    height: 32px !important;
+    margin: 0 10px 10px 10px;
+    font-family: 'Oxanium Regular';
+    width: 210px;
+    color: white;
+    /* color: #efba4d; */
+}
+
+#donatorsTitle:hover {
+    cursor: pointer;
+}
+
+#donatorsTitle h4 {
+    font-size: 18px;
+    margin: 6px 0 0 0;
+    transition: text-shadow 250ms ease;
+}
+
+#donatorsTitle:hover h4,
+#donatorsTitle:focus h4 {
+    text-shadow: 0px 0px 20px #fff, 0px 0px 20px #fff;
+}
+
+.doSVG {
+    width: 20px !important;
+    height: 20px !important;
+}
+
+.donator {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    width: auto;
+    font-size: 11.5px;
+    width: 200px;
+    margin: 0 10px 10px 10px;
+    box-shadow: rgba(0, 0, 0, 0.45) 1px 4px 10px 0px;
+}
+
+.donator:hover {
+    cursor: pointer;
+}
+
+.donatorImage {
+    width: 32px;
+    height: 32px;
+}
+
+.donatorName, .donatorPackage {
+    padding-left: 5px;
+    height: 16px;
+    width: 163px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: flex;
+    align-items: center;
+    transition: background-color 250ms ease-in-out;
+}
+
+.donatorName {
+    text-transform: uppercase;
+    font-weight: bolder;
+    color: white;
+    /* color: #efba4d; */
+    background-color: #39445e;
+}
+
+.donator:hover .donatorName {
+    background-color: #1c2436;
+}
+
+.donatorPackage {
+    color: #b0b0b0;
+    background-color: #4d576e;
+}
+
+.donator:hover .donatorPackage{
+    background-color: #2a3244;
+}
+
+/* Donator tooltip */
+.donatorToolTip {
+    visibility: hidden;
+    opacity: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    text-align: center;
+    border-radius: 4px;
+    position: absolute;
+    z-index: 1;
+    left: 100%;
+    font-size: 12px;
+    line-height: 20px;
+    transition: visibility 0s linear 0.25s, opacity 0.25s ease-in-out;
+    /*font-family: 'UASquared Regular';*/
+    font-family: 'Oxanium Regular';
+    white-space: nowrap;
+    padding: 2px 4px 0 4px;
+    color: white;
+    cursor: default;
+}
+
+.donatorToolTip::after {
+    content: " ";
+    position: absolute;
+    top: 50%;
+    right: 100%;
+    margin-top: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent rgba(0, 0, 0, 0.75) transparent transparent;
+}
+
+.donator:hover .donatorToolTip,
+.donator:focus .donatorToolTip,
+#donatorsTitle:hover .donatorToolTip,
+#donatorsTitle:focus .donatorToolTip {
+    visibility: visible;
+    opacity: 1;
+    transition-delay:0s;
+}
+
+
 /* Update available animation. */
 @keyframes glow-grow {
     0% {
@@ -2955,7 +3030,9 @@ input:checked + .toggleSwitchSlider:before {
     flex-direction: column;
     position: relative;
     top: 50px;
-    align-items: flex-start;
+    right: 32.5px;
+    align-items: flex-end;
+    width: 100% !important;
     height: calc(100% - 50px);
 }
 
@@ -2970,18 +3047,14 @@ input:checked + .toggleSwitchSlider:before {
 
 /* User profile avatar container. */
 #avatarContainer {
-    border-radius: 50%;
-    border: 2px solid #cad7e1;
-    box-sizing: border-box;
-    background: rgba(1, 2, 1, 0.5);
-    height: 70px;
-    width: 70px;
-    box-shadow: 0px 0px 10px 0px rgb(0, 0, 0);
+    height: 130px;
+    width: 130px;
     overflow: hidden;
     position: relative;
     background-position: center;
     background-repeat: no-repeat;
     background-size: contain;
+    margin-left: 50px;
 }
 
 /* Avatar edit overlay. */
@@ -2995,13 +3068,16 @@ input:checked + .toggleSwitchSlider:before {
     transition: 0.25s ease;
     font-weight: bold;
     letter-spacing: 2px;
-    background-color: rgba(0, 0, 0, 0.35);
     -webkit-user-select: none;
-    border: none;
+    border: none !important;
+    outline: 0 !important;
     cursor: pointer;
     width: 100%;
     height: 100%;
-    border-radius: 50%;
+    background-color: transparent;
+    color: black;
+    /*font-family: 'UASquared Regular';*/
+    font-family: 'Oxanium Regular';
 }
 #avatarOverlay:hover,
 #avatarOverlay:focus {
@@ -3013,7 +3089,7 @@ input:checked + .toggleSwitchSlider:before {
 
 /* User profile name text. */
 #user_text {
-    font-size: 12px;
+    font-size: 25px;
     min-width: 135px;
     font-weight: 900;
     letter-spacing: 1px;
@@ -3026,27 +3102,34 @@ input:checked + .toggleSwitchSlider:before {
 
 /* Social media icon content container. */
 #mediaContent {
-    position: relative;
+    /*background-color: #232f4c;*/
     display: flex;
     flex-direction: column;
-    margin-top: 25px;
-    height: calc(100% - 95px);
-    width: 70px;
-    align-items: center;
+    margin-top: 75px;
+    width: 170px;
+    height: 200px;
+    justify-content: right;
+    /*box-shadow: rgba(0, 0, 0, 0.45) 1px 4px 10px 0px;*/
 }
 
 /* Social Media Icon division containers. */
 #internalMedia, #externalMedia {
     display: flex;
     flex-direction: column;
+    align-items: center;
+
+}
+
+#externalMedia {
+  margin: 10px 0 10px 0;
 }
 
 /* Container object which wraps an icon to ensure fluid transitions. */
 .mediaContainer {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 27px;
+    height: 30px;
+    position: relative;
+    margin: 5px 10px;
+    width: 150px;
 }
 
 /* Divider bar between the external and internal icons. */
@@ -3059,66 +3142,96 @@ input:checked + .toggleSwitchSlider:before {
 
 /* Social media icon shared styles. */
 .mediaSVG {
-    fill: #ffffff;
-    height: 12px;
+    fill: white;
+    /*fill: #efba4d; */
     transition: 0.25s ease;
     cursor: pointer;
-    height: 12px;
-    width: 25px;
-}
-.mediaSVG:hover,
-.mediaURL:focus .mediaSVG,
-.mediaSVG:active {
-    height: 20px;
+    height: 26px !important;
 }
 
-/* Social media URL shared styles. */
-.mediaURL {
-    outline: none;
+.faSVG {
+    transition: 0.25s ease;
+    cursor: pointer;
+    height: 20px !important;
+    width: 20px !important;
+    margin-right: 5px;
 }
 
-/* Internal media button shared styles. */
-.mediaButton {
+.faSVG path {
+    fill: white;
+    /*fill: #efba4d; */
+    transition: 0.25s ease;
+}
+
+/* Media button title. */
+.mediaTitle {
+    line-height: 18px;
+    font-size: 18px;
+    margin-top: 2.5px;
+    font-family: 'Oxanium Regular';
+    font-weight: bold;
+    color: white !important;
+    /*color: #efba4d !important; */
+}
+
+.mediaHalf {
+    width: calc(50% - 5px) !important;
+}
+
+/* Internal media button/url shared styles. */
+.mediaClickable {
     background: none;
     border: none;
-    padding: 0px;
     display: flex;
+    justify-content: center;
     align-items: center;
     outline: none;
+    text-decoration: none;
+    width: 100%;
+    height: 100%;
+    background-color: #39445e;
+    transition: all 250ms ease-in-out;
+    box-shadow: rgba(0, 0, 0, 0.45) 1px 4px 10px 0px;
 }
 
-#settingsMediaContainer {
-    position: relative;
+#settingsMediaButton {
+    padding: 0;
 }
 
-/* Settings icon colors. */
-#settingsSVG {
-    stroke: #ffffff;
-    height: 15px;
-}
-.mediaButton:hover #settingsSVG,
-.mediaButton:focus #settingsSVG,
-.mediaButton:active #settingsSVG {
-    height: 23px;
+.mediaClickable:hover {
+    cursor: pointer;
+    background-color: #151f38;
 }
 
-/* Settings tooltip styles. */
-#settingsTooltip {
+#socialMediaContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Media tooltip styles. */
+.mediaToolTip {
     visibility: hidden;
     opacity: 0;
-    width: 75px;
-    height: 20px;
     background-color: rgba(0, 0, 0, 0.75);
     text-align: center;
     border-radius: 4px;
     position: absolute;
     z-index: 1;
-    right: 130%;
+    right: calc(100% + 10px);
     font-size: 12px;
     line-height: 20px;
+    top: calc(50% - 11px);
     transition: visibility 0s linear 0.25s, opacity 0.25s ease;
+    /*font-family: 'UASquared Regular';*/
+    font-family: 'Oxanium Regular';
+    white-space: nowrap;
+    padding: 2px 4px 0 4px;
+    color: white;
+    cursor: default;
 }
-#settingsTooltip::after {
+
+.mediaToolTip::after {
     content: " ";
     position: absolute;
     top: 50%;
@@ -3128,9 +3241,11 @@ input:checked + .toggleSwitchSlider:before {
     border-style: solid;
     border-color: transparent transparent transparent rgba(0, 0, 0, 0.75);
 }
-.mediaButton:hover #settingsTooltip,
-.mediaButton:focus #settingsTooltip,
-.mediaButton:active #settingsTooltip {
+
+
+.mediaClickable:hover .mediaToolTip,
+.mediaClickable:focus .mediaToolTip,
+.mediaClickable:active .mediaToolTip {
     visibility: visible;
     opacity: 1;
     transition-delay:0s;
@@ -3156,22 +3271,78 @@ input:checked + .toggleSwitchSlider:before {
 }
 
 /* Youtube icon colors. */
+#youtubeURL:hover #youtubeSVG,
 #youtubeSVG:hover,
 #youtubeURL:focus #youtubeSVG {
-    fill: #f00;
+    fill: #f00 !important;
 }
 #youtubeSVG:active {
-    fill: #ea0202;
+    fill: #ea0202 !important;
 }
 
 /* Discord icon colors. */
+#discordURL:hover #discordSVG,
 #discordSVG:hover,
 #discordURL:focus #discordSVG {
-    fill: #7288d9;
+    fill: #7288d9 !important;
 }
 #discordSVG:active {
-    fill: #657ac4;
+    fill: #657ac4 !important;
 }
+
+/* Tournament styles. */
+#tournamentContent {
+    margin: 5px 10px 0 0;
+    width: 275px;
+    padding: 8px 5px;
+    text-align: center;
+    text-decoration: none;
+    color: white;
+    background-color: #39445e;
+    transition: all 250ms ease-in-out;
+    box-shadow: rgba(0, 0, 0, 0.45) 1px 4px 10px 0px;
+    position: relative;
+}
+
+#tournamentContent:hover {
+    cursor: pointer;
+    background-color: #151f38;
+}
+
+#tournamentContent .mediaToolTip {
+    top: calc(50% - 11px);
+}
+
+#tournamentContent:hover .mediaToolTip,
+#tournamentContent:focus .mediaToolTip,
+#tournamentContent:active .mediaToolTip {
+    visibility: visible;
+    opacity: 1;
+    transition-delay: 0s;
+}
+
+#tournamentContent h4 {
+    margin: 0 0 2px 0;
+    font-size: 15px;
+}
+
+#tournamentContent p {
+    font-size: 13px;
+}
+
+.taSVG {
+    transition: 0.25s ease;
+    cursor: pointer;
+    height: 18px !important;
+    width: 18px !important;
+    margin-right: 5px;
+}
+
+.taSVG path {
+    fill: white;
+    transition: 0.25s ease;
+}
+
 
 /*******************************************************************************
  *                                                                             *
@@ -3180,11 +3351,14 @@ input:checked + .toggleSwitchSlider:before {
  ******************************************************************************/
 
 /* Style for a general label on the bottom of the landing view. */
+
 .bot_label {
-    font-size: 9px;
+    font-size: 25px;
     letter-spacing: 1px;
     font-weight: bold;
     text-shadow: 0px 0px 0px #bebcbb;
+    font-family: 'Acknowtt';
+    white-space: nowrap;
 }
 
 /* Divider used on the bottom of the landing view. */
@@ -3208,11 +3382,14 @@ input:checked + .toggleSwitchSlider:before {
 
 /* Span which displays the player count of the selected server. */
 #player_count {
-    color: #949494;
-    font-size: 8px;
+    color: #37db73;
     font-weight: 900;
-    text-shadow: 0px 0px 20px #949494;
-    margin-left: 10px;
+
+    margin-left: 15px;
+
+    font-size: 25px;
+    /*font-family: 'UASquared Regular';*/
+    font-family: 'Oxanium Regular';
 }
 
 /* Wrapper container for the mojang status bar. */
@@ -3220,6 +3397,7 @@ input:checked + .toggleSwitchSlider:before {
     position: relative;
     display: flex;
     cursor: pointer;
+    margin-left: 150px !important;
 }
 
 /* Icon which displays the status of the mojang services. */
@@ -3328,6 +3506,7 @@ input:checked + .toggleSwitchSlider:before {
     border: none;
     cursor: pointer;
     outline: none;
+    font-family: 'Acknowtt';
 }
 #newsButton:hover #newsButtonText,
 #newsButton:focus #newsButtonText {
@@ -3354,6 +3533,7 @@ input:checked + .toggleSwitchSlider:before {
 
 /* Icon which indicates there is new news. */
 #newsButtonAlert {
+    display: none;
     width: 5px;
     height: 5px;
     position: absolute;
@@ -3376,7 +3556,7 @@ input:checked + .toggleSwitchSlider:before {
     font-weight: 900;
     letter-spacing: 2px;
     text-shadow: 0px 0px 0px #bebcbb;
-    font-size: 11px;
+    font-size: 22px;
     line-height: 30px;
     display: flex;
     transition: 0.25s ease;
@@ -3388,9 +3568,11 @@ input:checked + .toggleSwitchSlider:before {
 
 /* Main launch content container. */
 #landingContainer > #lower > #right #launch_content {
-    position: relative;
-    top: 25px;
+    position: absolute;
     display: inline-flex;
+    line-height: 24px;
+    right: 42.5px;
+    margin-top: 12.5px;
 }
 
 /* The launch button. */
@@ -3401,10 +3583,14 @@ input:checked + .toggleSwitchSlider:before {
     font-weight: 900;
     letter-spacing: 2px;
     text-shadow: 0px 0px 0px #bebcbb;
-    font-size: 20px;
+    font-size: 30px;
     padding: 0px;
+    margin: 0px 0px 5px 0px;
     transition: 0.25s ease;
     outline: none;
+    font-family: 'Acknowtt';
+    display: flex;
+    align-items: center;
 }
 #launch_button:hover,
 #launch_button:focus {
@@ -3420,13 +3606,51 @@ input:checked + .toggleSwitchSlider:before {
     pointer-events: none;
 }
 
+#launch_button #text {
+    margin-top: 10px;
+}
+
+#launch_button:after {
+    font-family: 'Oxanium Regular';
+    content: '\203A';
+    margin: 6px 5px 0 5px;
+    animation: arrows 1s steps(5, end) infinite;
+}
+
+@keyframes arrows {
+    0%, 20% {
+      color: rgba(0,0,0,0);
+      text-shadow:
+        .25em 0 0 rgba(0,0,0,0),
+        .5em 0 0 rgba(0,0,0,0);
+    }
+    40% {
+      color: white;
+      text-shadow:
+        .25em 0 0 rgba(0,0,0,0),
+        .5em 0 0 rgba(0,0,0,0);
+    }
+    60% {
+      text-shadow:
+        .25em 0 0 white,
+        .5em 0 0 rgba(0,0,0,0);
+    }
+    80%, 100% {
+      text-shadow:
+        .25em 0 0 white,
+        .5em 0 0 white;
+    }
+}
+  
+
 /* Launch details main container, hidden until launch processing begins. */
 #launch_details {
-    position: relative;
+    position: absolute;
     top: 25px;
+    right: 42.5px;
     display: none;
 }
- 
+
 /* Left side of launch details container, displays percentage and a divider. */
 #launch_details_left {
     display: flex;
@@ -3459,6 +3683,9 @@ input:checked + .toggleSwitchSlider:before {
     line-height: 24px;
     padding: 0px;
     transition: 0.25s ease;
+    font-size: 25px;
+    /*font-family: 'UASquared Regular';*/
+    font-family: 'Oxanium Regular';
 }
 #server_selection_button:hover,
 #server_selection_button:focus {
@@ -3488,6 +3715,7 @@ input:checked + .toggleSwitchSlider:before {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+    text-transform: uppercase;
 }
 
 /*******************************************************************************
@@ -3520,12 +3748,13 @@ input:checked + .toggleSwitchSlider:before {
     flex-direction: column;
     align-items: center;
     /*justify-content: space-between;*/
-    width: 300px;
+    width: 400px;
     /*height: 35%;*/
     box-sizing: border-box;
     padding: 15px 0px;
     /* background-color: #424242; */
     text-align: center;
+    font-family: 'Oxanium Regular' !important;
 }
 
 /* Main overlay content anchor styles. */
@@ -3579,7 +3808,7 @@ input:checked + .toggleSwitchSlider:before {
 }
 
 /* Overlay acknowledge button styles. */
-#overlayAcknowledge {
+#overlayAcknowledge, #overlayDiscord, #overlayFolder {
     background: none;
     border: 1px solid #ffffff;
     color: white;
@@ -3591,11 +3820,19 @@ input:checked + .toggleSwitchSlider:before {
     transition: 0.25s ease;
 }
 #overlayAcknowledge:hover,
-#overlayAcknowledge:focus {
+#overlayAcknowledge:focus,
+
+#overlayDiscord:hover,
+#overlayDiscord:focus,
+
+#overlayFolder:hover,
+#overlayFolder:focus {
     box-shadow: 0px 0px 10px 0px #fff;
     outline: none;
 }
-#overlayAcknowledge:active {
+#overlayAcknowledge:active,
+#overlayDiscord:active,
+#overlayFolder:active {
     border-color: rgba(255, 255, 255, 0.75);
     color: rgba(255, 255, 255, 0.75);
 }
@@ -3763,15 +4000,19 @@ input:checked + .toggleSwitchSlider:before {
 
 /* The name of the server listing. */
 .serverListingName {
-    font-size: 14px;
+    font-size: 21px !important;
     font-weight: bold;
+    /*font-family: 'UASquared Regular';*/
+    font-family: 'Oxanium Regular';
 }
 
 /* Description for the server listing. */
 .serverListingDescription {
-    font-size: 10px;
+    font-size: 14px;
     line-height: 10px;
     font-weight: bold;
+    /*font-family: 'UASquared Regular';*/
+    font-family: 'Oxanium Regular';
 }
 
 /* Content container for the server listing's information. */
@@ -3793,6 +4034,7 @@ input:checked + .toggleSwitchSlider:before {
     border-radius: 2px;
     background: rgba(31, 140, 11, 0.8);
     padding: 0px 2px;
+    font-family: 'Oxanium Regular';
 }
 
 /* The revision version of the server's manifest. */
@@ -3801,6 +4043,7 @@ input:checked + .toggleSwitchSlider:before {
     font-size: 10px;
     line-height: 12px;
     padding: 0px 5px;
+    font-family: 'Oxanium Regular';
 }
 
 /* Star which indicates the default (main) server. */
@@ -3891,6 +4134,8 @@ input:checked + .toggleSwitchSlider:before {
     border: none;
     outline: none;
     cursor: pointer;
+    /*font-family: 'UASquared Regular';*/
+    font-family: 'Oxanium Regular';
 }
 #serverSelectCancel:hover,
 #serverSelectCancel:focus,
@@ -3964,4 +4209,16 @@ input:checked + .toggleSwitchSlider:before {
 /* Class which is applied when the spinner image is spinning. */
 .rotating {
     animation: rotating 10s linear infinite;
+}
+
+/* Windows Account support 18/01/21 */
+#loginMSButton {
+    border-color: transparent;
+    background-color: transparent;
+    cursor: pointer;
+    font-family: 'NanumGothicBold';
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 3px;
+    color: rgba(255, 255, 255, 0.75);
 }

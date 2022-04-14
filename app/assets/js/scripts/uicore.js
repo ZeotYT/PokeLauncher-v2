@@ -5,16 +5,14 @@
  * modules, excluding dependencies.
  */
 // Requirements
-const $                              = require('jquery')
-const {ipcRenderer, shell, webFrame} = require('electron')
-const remote                         = require('@electron/remote')
-const isDev                          = require('./assets/js/isdev')
-const { LoggerUtil }                 = require('helios-core')
-const LoggerUtil1                    = require('./assets/js/loggerutil')
+const $                                      = require('jquery')
+const {ipcRenderer, remote, shell, webFrame} = require('electron')
+const isDev                                  = require('./assets/js/isdev')
+const LoggerUtil                             = require('./assets/js/loggerutil')
 
-const loggerUICore             = LoggerUtil1('%c[UICore]', 'color: #000668; font-weight: bold')
-const loggerAutoUpdater        = LoggerUtil1('%c[AutoUpdater]', 'color: #000668; font-weight: bold')
-const loggerAutoUpdaterSuccess = LoggerUtil1('%c[AutoUpdater]', 'color: #209b07; font-weight: bold')
+const loggerUICore             = LoggerUtil('%c[UICore]', 'color: #000668; font-weight: bold')
+const loggerAutoUpdater        = LoggerUtil('%c[AutoUpdater]', 'color: #000668; font-weight: bold')
+const loggerAutoUpdaterSuccess = LoggerUtil('%c[AutoUpdater]', 'color: #209b07; font-weight: bold')
 
 // Log deprecation and process warnings.
 process.traceProcessWarnings = true
@@ -28,9 +26,9 @@ window.eval = global.eval = function () {
 
 // Display warning when devtools window is opened.
 remote.getCurrentWebContents().on('devtools-opened', () => {
-    console.log('%cThe console is dark and full of terrors.', 'color: white; -webkit-text-stroke: 4px #a02d2a; font-size: 60px; font-weight: bold')
-    console.log('%cIf you\'ve been told to paste something here, you\'re being scammed.', 'font-size: 16px')
-    console.log('%cUnless you know exactly what you\'re doing, close this window.', 'font-size: 16px')
+    //console.log('%cThe console is dark and full of terrors.', 'color: white; -webkit-text-stroke: 4px #a02d2a; font-size: 60px; font-weight: bold')
+    //console.log('%cIf you\'ve been told to paste something here, you\'re being scammed.', 'font-size: 16px')
+    //console.log('%cUnless you know exactly what you\'re doing, close this window.', 'font-size: 16px')
 })
 
 // Disable zoom, needed for darwin.
@@ -43,20 +41,25 @@ if(!isDev){
     ipcRenderer.on('autoUpdateNotification', (event, arg, info) => {
         switch(arg){
             case 'checking-for-update':
+            /*
                 loggerAutoUpdater.log('Checking for update..')
                 settingsUpdateButtonStatus('Checking for Updates..', true)
+                */
                 break
             case 'update-available':
+            /*
                 loggerAutoUpdaterSuccess.log('New update available', info.version)
-                
+
                 if(process.platform === 'darwin'){
-                    info.darwindownload = `https://github.com/dscalzi/HeliosLauncher/releases/download/v${info.version}/Helios-Launcher-setup-${info.version}${process.arch === 'arm64' ? '-arm64' : '-x64'}.dmg`
+                    info.darwindownload = `https://github.com/dscalzi/HeliosLauncher/releases/download/v${info.version}/helioslauncher-setup-${info.version}.dmg`
                     showUpdateUI(info)
                 }
-                
+
                 populateSettingsUpdateInformation(info)
+                */
                 break
             case 'update-downloaded':
+            /*
                 loggerAutoUpdaterSuccess.log('Update ' + info.version + ' ready to be installed.')
                 settingsUpdateButtonStatus('Install Now', false, () => {
                     if(!isDev){
@@ -64,16 +67,21 @@ if(!isDev){
                     }
                 })
                 showUpdateUI(info)
+                */
                 break
             case 'update-not-available':
+            /*
                 loggerAutoUpdater.log('No new update found.')
                 settingsUpdateButtonStatus('Check for Updates')
+                */
                 break
             case 'ready':
+            /*
                 updateCheckListener = setInterval(() => {
                     ipcRenderer.send('autoUpdateAction', 'checkForUpdate')
                 }, 1800000)
                 ipcRenderer.send('autoUpdateAction', 'checkForUpdate')
+                */
                 break
             case 'realerror':
                 if(info != null && info.code != null){
@@ -99,7 +107,7 @@ if(!isDev){
  * allowPrerelease. If we are running a prerelease version, then
  * this will always be set to true, regardless of the current value
  * of val.
- * 
+ *
  * @param {boolean} val The new allow prerelease value.
  */
 function changeAllowPrerelease(val){
@@ -189,7 +197,7 @@ document.addEventListener('readystatechange', function () {
         document.getElementById('launch_progress').style.width = 170.8
         document.getElementById('launch_details_right').style.maxWidth = 170.8
         document.getElementById('launch_progress_label').style.width = 53.21
-        
+
     }
 
 }, false)
@@ -205,7 +213,7 @@ $(document).on('click', 'a[href^="http"]', function(event) {
 /**
  * Opens DevTools window if you hold (ctrl + shift + i).
  * This will crash the program if you are using multiple
- * DevTools, for example the chrome debugger in VS Code. 
+ * DevTools, for example the chrome debugger in VS Code.
  */
 document.addEventListener('keydown', function (e) {
     if((e.key === 'I' || e.key === 'i') && e.ctrlKey && e.shiftKey){

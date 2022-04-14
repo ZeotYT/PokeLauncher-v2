@@ -468,7 +468,7 @@ class ProcessBuilder {
                             val = this.authUser.accessToken
                             break
                         case 'user_type':
-                            val = this.authUser.type === 'microsoft' ? 'msa' : 'mojang'
+                            val = 'mojang'
                             break
                         case 'version_type':
                             val = this.versionData.type
@@ -504,9 +504,7 @@ class ProcessBuilder {
         try {
             isAutoconnectBroken = Util.isAutoconnectBroken(this.forgeData.id.split('-')[2])
         } catch(err) {
-            logger.error(err)
             logger.error('Forge version format changed.. assuming autoconnect works.')
-            logger.debug('Forge version:', this.forgeData.id)
         }
 
         if(isAutoconnectBroken) {
@@ -566,10 +564,10 @@ class ProcessBuilder {
                         val = this.authUser.accessToken
                         break
                     case 'user_type':
-                        val = this.authUser.type === 'microsoft' ? 'msa' : 'mojang'
+                        val = 'mojang'
                         break
-                    case 'user_properties': // 1.8.9 and below.
-                        val = '{}'
+                    case 'user_properties':
+                        val = "{}"
                         break
                     case 'version_type':
                         val = this.versionData.type
@@ -657,15 +655,11 @@ class ProcessBuilder {
 
         // Resolve the Mojang declared libraries.
         const mojangLibs = this._resolveMojangLibraries(tempNativePath)
+        cpArgs = cpArgs.concat(mojangLibs)
 
         // Resolve the server declared libraries.
         const servLibs = this._resolveServerLibraries(mods)
-
-        // Merge libraries, server libs with the same
-        // maven identifier will override the mojang ones.
-        // Ex. 1.7.10 forge overrides mojang's guava with newer version.
-        const finalLibs = {...mojangLibs, ...servLibs}
-        cpArgs = cpArgs.concat(Object.values(finalLibs))
+        cpArgs = cpArgs.concat(servLibs)
 
         this._processClassPathList(cpArgs)
 
@@ -679,10 +673,10 @@ class ProcessBuilder {
      * TODO - clean up function
      * 
      * @param {string} tempNativePath The path to store the native libraries.
-     * @returns {{[id: string]: string}} An object containing the paths of each library mojang declares.
+     * @returns {Array.<string>} An array containing the paths of each library mojang declares.
      */
     _resolveMojangLibraries(tempNativePath){
-        const libs = {}
+        const libs = []
 
         const libArr = this.versionData.libraries
         fs.ensureDirSync(tempNativePath)
@@ -693,8 +687,7 @@ class ProcessBuilder {
                     const dlInfo = lib.downloads
                     const artifact = dlInfo.artifact
                     const to = path.join(this.libPath, artifact.path)
-                    const versionIndependentId = lib.name.substring(0, lib.name.lastIndexOf(':'))
-                    libs[versionIndependentId] = to
+                    libs.push(to)
                 } else {
                     // Extract the native library.
                     const exclusionArr = lib.extract != null ? lib.extract.exclude : ['META-INF/']
@@ -742,21 +735,21 @@ class ProcessBuilder {
      * declare libraries.
      * 
      * @param {Array.<Object>} mods An array of enabled mods which will be launched with this process.
-     * @returns {{[id: string]: string}} An object containing the paths of each library this server requires.
+     * @returns {Array.<string>} An array containing the paths of each library this server requires.
      */
     _resolveServerLibraries(mods){
         const mdls = this.server.getModules()
-        let libs = {}
+        let libs = []
 
         // Locate Forge/Libraries
         for(let mdl of mdls){
             const type = mdl.getType()
             if(type === DistroManager.Types.ForgeHosted || type === DistroManager.Types.Library){
-                libs[mdl.getVersionlessID()] = mdl.getArtifact().getPath()
+                libs.push(mdl.getArtifact().getPath())
                 if(mdl.hasSubModules()){
                     const res = this._resolveModuleLibraries(mdl)
                     if(res.length > 0){
-                        libs = {...libs, ...res}
+                        libs = libs.concat(res)
                     }
                 }
             }
@@ -767,7 +760,7 @@ class ProcessBuilder {
             if(mods.sub_modules != null){
                 const res = this._resolveModuleLibraries(mods[i])
                 if(res.length > 0){
-                    libs = {...libs, ...res}
+                    libs = libs.concat(res)
                 }
             }
         }

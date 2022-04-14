@@ -1,10 +1,10 @@
 // Requirements
-const os     = require('os')
+const os = require('os')
+const rimraf = require('rimraf')
 const semver = require('semver')
 
 const { JavaGuard } = require('./assets/js/assetguard')
 const DropinModUtil  = require('./assets/js/dropinmodutil')
-const { MSFT_OPCODE, MSFT_REPLY_TYPE, MSFT_ERROR } = require('./assets/js/ipcconstants')
 
 const settingsState = {
     invalid: new Set()
@@ -44,7 +44,7 @@ bindSettingsSelect()
 
 function bindFileSelectors(){
     for(let ele of document.getElementsByClassName('settingsFileSelButton')){
-        
+
         ele.onclick = async e => {
             const isJavaExecSel = ele.id === 'settingsJavaExecSel'
             const directoryDialog = ele.hasAttribute('dialogDirectory') && ele.getAttribute('dialogDirectory') == 'true'
@@ -86,7 +86,7 @@ bindFileSelectors()
 /**
   * Bind value validators to the settings UI elements. These will
   * validate against the criteria defined in the ConfigManager (if
-  * any). If the value is invalid, the UI will reflect this and saving
+  * and). If the value is invalid, the UI will reflect this and saving
   * will be disabled until the value is corrected. This is an automated
   * process. More complex UI may need to be bound separately.
   */
@@ -180,11 +180,7 @@ function saveSettingsValues(){
                 if(v.type === 'number' || v.type === 'text'){
                     // Special Conditions
                     if(cVal === 'JVMOptions'){
-                        if(!v.value.trim()) {
-                            sFn([])
-                        } else {
-                            sFn(v.value.trim().split(/\s+/))
-                        }
+                        sFn(v.value.split(' '))
                     } else {
                         sFn(v.value)
                     }
@@ -221,7 +217,7 @@ let selectedSettingsTab = 'settingsTabAccount'
 /**
  * Modify the settings container UI when the scroll threshold reaches
  * a certain poin.
- * 
+ *
  * @param {UIEvent} e The scroll event.
  */
 function settingsTabScrollListener(e){
@@ -248,7 +244,7 @@ function setupSettingsTabs(){
 /**
  * Settings nav item onclick lisener. Function is exposed so that
  * other UI elements can quickly toggle to a certain tab from other views.
- * 
+ *
  * @param {Element} ele The nav item which has been clicked.
  * @param {boolean} fade Optional. True to fade transition.
  */
@@ -298,7 +294,7 @@ const settingsNavDone = document.getElementById('settingsNavDone')
 
 /**
  * Set if the settings save (done) button is disabled.
- * 
+ *
  * @param {boolean} v True to disable, false to enable.
  */
 function settingsSaveDisabled(v){
@@ -319,113 +315,14 @@ settingsNavDone.onclick = () => {
  * Account Management Tab
  */
 
-const msftLoginLogger = LoggerUtil.getLogger('Microsoft Login')
-const msftLogoutLogger = LoggerUtil.getLogger('Microsoft Logout')
-
-// Bind the add mojang account button.
-document.getElementById('settingsAddMojangAccount').onclick = (e) => {
+// Bind the add account button.
+document.getElementById('settingsAddAccount').onclick = (e) => {
     switchView(getCurrentView(), VIEWS.login, 500, 500, () => {
         loginViewOnCancel = VIEWS.settings
         loginViewOnSuccess = VIEWS.settings
         loginCancelEnabled(true)
     })
 }
-
-// Bind the add microsoft account button.
-document.getElementById('settingsAddMicrosoftAccount').onclick = (e) => {
-    switchView(getCurrentView(), VIEWS.waiting, 500, 500, () => {
-        ipcRenderer.send(MSFT_OPCODE.OPEN_LOGIN, VIEWS.settings, VIEWS.settings)
-    })
-}
-
-// Bind reply for Microsoft Login.
-ipcRenderer.on(MSFT_OPCODE.REPLY_LOGIN, (_, ...arguments_) => {
-    if (arguments_[0] === MSFT_REPLY_TYPE.ERROR) {
-
-        const viewOnClose = arguments_[2]
-        console.log(arguments_)
-        switchView(getCurrentView(), viewOnClose, 500, 500, () => {
-
-            if(arguments_[1] === MSFT_ERROR.NOT_FINISHED) {
-                // User cancelled.
-                msftLoginLogger.info('Login cancelled by user.')
-                return
-            }
-
-            // Unexpected error.
-            setOverlayContent(
-                'Something Went Wrong',
-                'Microsoft authentication failed. Please try again.',
-                'OK'
-            )
-            setOverlayHandler(() => {
-                toggleOverlay(false)
-            })
-            toggleOverlay(true)
-        })
-    } else if(arguments_[0] === MSFT_REPLY_TYPE.SUCCESS) {
-        const queryMap = arguments_[1]
-        const viewOnClose = arguments_[2]
-
-        // Error from request to Microsoft.
-        if (Object.prototype.hasOwnProperty.call(queryMap, 'error')) {
-            switchView(getCurrentView(), viewOnClose, 500, 500, () => {
-                // TODO Dont know what these errors are. Just show them I guess.
-                // This is probably if you messed up the app registration with Azure.
-                console.log('Error getting authCode, is Azure application registered correctly?')
-                console.log(error)
-                console.log(error_description)
-                console.log('Full query map', queryMap)
-                let error = queryMap.error // Error might be 'access_denied' ?
-                let errorDesc = queryMap.error_description
-                setOverlayContent(
-                    error,
-                    errorDesc,
-                    'OK'
-                )
-                setOverlayHandler(() => {
-                    toggleOverlay(false)
-                })
-                toggleOverlay(true)
-
-            })
-        } else {
-
-            msftLoginLogger.info('Acquired authCode, proceeding with authentication.')
-
-            const authCode = queryMap.code
-            AuthManager.addMicrosoftAccount(authCode).then(value => {
-                updateSelectedAccount(value)
-                switchView(getCurrentView(), viewOnClose, 500, 500, () => {
-                    prepareSettings()
-                })
-            })
-                .catch((displayableError) => {
-
-                    let actualDisplayableError
-                    if(isDisplayableError(displayableError)) {
-                        msftLoginLogger.error('Error while logging in.', displayableError)
-                        actualDisplayableError = displayableError
-                    } else {
-                        // Uh oh.
-                        msftLoginLogger.error('Unhandled error during login.', displayableError)
-                        actualDisplayableError = {
-                            title: 'Unknown Error During Login',
-                            desc: 'An unknown error has occurred. Please see the console for details.'
-                        }
-                    }
-
-                    switchView(getCurrentView(), viewOnClose, 500, 500, () => {
-                        setOverlayContent(actualDisplayableError.title, actualDisplayableError.desc, Lang.queryJS('login.tryAgain'))
-                        setOverlayHandler(() => {
-                            toggleOverlay(false)
-                        })
-                        toggleOverlay(true)
-                    })
-                })
-        }
-    }
-})
 
 /**
  * Bind functionality for the account selection buttons. If another account
@@ -460,34 +357,58 @@ function bindAuthAccountLogOut(){
     Array.from(document.getElementsByClassName('settingsAuthAccountLogOut')).map((val) => {
         val.onclick = (e) => {
             let isLastAccount = false
-            if(Object.keys(ConfigManager.getAuthAccounts()).length === 1){
+            let uuid = val.closest('.settingsAuthAccount').getAttribute('uuid')
+            let authAccounts = ConfigManager.getAuthAccounts()
+            let isMicrosoft = false
+            let sysRoot = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Application Support' : process.env.HOME)
+            let nmpPath = path.join(sysRoot, 'PokeLauncher/nmp-cache')
+
+            if (authAccounts[uuid].type === "microsoft") {
+                isMicrosoft = true
+            }
+
+            if(Object.keys(authAccounts).length === 1){
                 isLastAccount = true
                 setOverlayContent(
-                    'Warning<br>This is Your Last Account',
-                    'In order to use the launcher you must be logged into at least one account. You will need to login again after.<br><br>Are you sure you want to log out?',
-                    'I\'m Sure',
+                    '<br>Last Account',
+                    'This is your last account. Are you sure you want to remove it?',
+                    'Log Out',
                     'Cancel'
                 )
                 setOverlayHandler(() => {
+                    if (isMicrosoft) {
+                        rimraf.sync(nmpPath)
+                    }
+                    ConfigManager.removeAuthAccount(uuid)
                     processLogOut(val, isLastAccount)
+                    
                     toggleOverlay(false)
+                    switchView(getCurrentView(), VIEWS.login)
+
+                    delete authAccounts[uuid]
+                    ConfigManager.save()
                 })
                 setDismissHandler(() => {
                     toggleOverlay(false)
                 })
                 toggleOverlay(true, true)
             } else {
+                if (isMicrosoft) {
+                    rimraf.sync(nmpPath)
+                    ConfigManager.removeAuthAccount(uuid)
+                }
+
                 processLogOut(val, isLastAccount)
+                delete authAccounts[uuid]
+                ConfigManager.save()
             }
-            
         }
     })
 }
 
-let msAccDomElementCache
 /**
  * Process a log out.
- * 
+ *
  * @param {Element} val The log out button element.
  * @param {boolean} isLastAccount If this logout is on the last added account.
  */
@@ -495,95 +416,23 @@ function processLogOut(val, isLastAccount){
     const parent = val.closest('.settingsAuthAccount')
     const uuid = parent.getAttribute('uuid')
     const prevSelAcc = ConfigManager.getSelectedAccount()
-    const targetAcc = ConfigManager.getAuthAccount(uuid)
-    if(targetAcc.type === 'microsoft') {
-        msAccDomElementCache = parent
-        switchView(getCurrentView(), VIEWS.waiting, 500, 500, () => {
-            ipcRenderer.send(MSFT_OPCODE.OPEN_LOGOUT, uuid, isLastAccount)
-        })
-    } else {
-        AuthManager.removeMojangAccount(uuid).then(() => {
-            if(!isLastAccount && uuid === prevSelAcc.uuid){
-                const selAcc = ConfigManager.getSelectedAccount()
-                refreshAuthAccountSelected(selAcc.uuid)
-                updateSelectedAccount(selAcc)
-                validateSelectedAccount()
-            }
-            if(isLastAccount) {
-                loginOptionsCancelEnabled(false)
-                loginOptionsViewOnLoginSuccess = VIEWS.settings
-                loginOptionsViewOnLoginCancel = VIEWS.loginOptions
-                switchView(getCurrentView(), VIEWS.loginOptions)
-            }
-        })
-        $(parent).fadeOut(250, () => {
-            parent.remove()
-        })
-    }
+    AuthManager.removeAccount(uuid).then(() => {
+        if(uuid === prevSelAcc.uuid){
+            const selAcc = ConfigManager.getSelectedAccount()
+            refreshAuthAccountSelected(selAcc.uuid)
+            updateSelectedAccount(selAcc)
+            validateSelectedAccount()
+        }
+    })
+    $(parent).fadeOut(250, () => {
+        parent.remove()
+    })
 }
-
-// Bind reply for Microsoft Logout.
-ipcRenderer.on(MSFT_OPCODE.REPLY_LOGOUT, (_, ...arguments_) => {
-    if (arguments_[0] === MSFT_REPLY_TYPE.ERROR) {
-        switchView(getCurrentView(), VIEWS.settings, 500, 500, () => {
-
-            if(arguments_.length > 1 && arguments_[1] === MSFT_ERROR.NOT_FINISHED) {
-                // User cancelled.
-                msftLogoutLogger.info('Logout cancelled by user.')
-                return
-            }
-
-            // Unexpected error.
-            setOverlayContent(
-                'Something Went Wrong',
-                'Microsoft logout failed. Please try again.',
-                'OK'
-            )
-            setOverlayHandler(() => {
-                toggleOverlay(false)
-            })
-            toggleOverlay(true)
-        })
-    } else if(arguments_[0] === MSFT_REPLY_TYPE.SUCCESS) {
-        
-        const uuid = arguments_[1]
-        const isLastAccount = arguments_[2]
-        const prevSelAcc = ConfigManager.getSelectedAccount()
-
-        msftLogoutLogger.info('Logout Successful. uuid:', uuid)
-        
-        AuthManager.removeMicrosoftAccount(uuid)
-            .then(() => {
-                if(!isLastAccount && uuid === prevSelAcc.uuid){
-                    const selAcc = ConfigManager.getSelectedAccount()
-                    refreshAuthAccountSelected(selAcc.uuid)
-                    updateSelectedAccount(selAcc)
-                    validateSelectedAccount()
-                }
-                if(isLastAccount) {
-                    loginOptionsCancelEnabled(false)
-                    loginOptionsViewOnLoginSuccess = VIEWS.settings
-                    loginOptionsViewOnLoginCancel = VIEWS.loginOptions
-                    switchView(getCurrentView(), VIEWS.loginOptions)
-                }
-                if(msAccDomElementCache) {
-                    msAccDomElementCache.remove()
-                    msAccDomElementCache = null
-                }
-            })
-            .finally(() => {
-                if(!isLastAccount) {
-                    switchView(getCurrentView(), VIEWS.settings, 500, 500)
-                }
-            })
-
-    }
-})
 
 /**
  * Refreshes the status of the selected account on the auth account
  * elements.
- * 
+ *
  * @param {string} uuid The UUID of the new selected account.
  */
 function refreshAuthAccountSelected(uuid){
@@ -601,8 +450,7 @@ function refreshAuthAccountSelected(uuid){
     })
 }
 
-const settingsCurrentMicrosoftAccounts = document.getElementById('settingsCurrentMicrosoftAccounts')
-const settingsCurrentMojangAccounts = document.getElementById('settingsCurrentMojangAccounts')
+const settingsCurrentAccounts = document.getElementById('settingsCurrentAccounts')
 
 /**
  * Add auth account elements for each one stored in the authentication database.
@@ -615,15 +463,13 @@ function populateAuthAccounts(){
     }
     const selectedUUID = ConfigManager.getSelectedAccount().uuid
 
-    let microsoftAuthAccountStr = ''
-    let mojangAuthAccountStr = ''
+    let authAccountStr = ''
 
-    authKeys.forEach((val) => {
+    authKeys.map((val) => {
         const acc = authAccounts[val]
-
-        const accHtml = `<div class="settingsAuthAccount" uuid="${acc.uuid}">
+        authAccountStr += `<div class="settingsAuthAccount" uuid="${acc.uuid}">
             <div class="settingsAuthAccountLeft">
-                <img class="settingsAuthAccountImage" alt="${acc.displayName}" src="https://mc-heads.net/body/${acc.uuid}/60">
+                <img class="settingsAuthAccountImage" alt="${acc.displayName}" src="https://crafatar.com/renders/body/${acc.uuid}?scale=3&default=MHF_Steve&overlay">
             </div>
             <div class="settingsAuthAccountRight">
                 <div class="settingsAuthAccountDetails">
@@ -644,17 +490,9 @@ function populateAuthAccounts(){
                 </div>
             </div>
         </div>`
-
-        if(acc.type === 'microsoft') {
-            microsoftAuthAccountStr += accHtml
-        } else {
-            mojangAuthAccountStr += accHtml
-        }
-
     })
 
-    settingsCurrentMicrosoftAccounts.innerHTML = microsoftAuthAccountStr
-    settingsCurrentMojangAccounts.innerHTML = mojangAuthAccountStr
+    settingsCurrentAccounts.innerHTML = authAccountStr
 }
 
 /**
@@ -707,7 +545,7 @@ function resolveModsForUI(){
 
 /**
  * Recursively build the mod UI elements.
- * 
+ *
  * @param {Object[]} mdls An array of modules to parse.
  * @param {boolean} submodules Whether or not we are parsing submodules.
  * @param {Object} servConf The server configuration object for this module level.
@@ -807,7 +645,7 @@ function saveModConfiguration(){
 
 /**
  * Recursively save mod config with submods.
- * 
+ *
  * @param {Object} modConf Mod config object to save.
  */
 function _saveModConfiguration(modConf){
@@ -874,9 +712,9 @@ function resolveDropinModsForUI(){
 function bindDropinModsRemoveButton(){
     const sEls = settingsModsContainer.querySelectorAll('[remmod]')
     Array.from(sEls).map((v, index, arr) => {
-        v.onclick = async () => {
+        v.onclick = () => {
             const fullName = v.getAttribute('remmod')
-            const res = await DropinModUtil.deleteDropinMod(CACHE_SETTINGS_MODS_DIR, fullName)
+            const res = DropinModUtil.deleteDropinMod(CACHE_SETTINGS_MODS_DIR, fullName)
             if(res){
                 document.getElementById(fullName).remove()
             } else {
@@ -1072,7 +910,7 @@ function loadSelectedServerOnModsTab(){
                         <path class="cls-1" d="M100.93,65.54C89,62,68.18,55.65,63.54,52.13c2.7-5.23,18.8-19.2,28-27.55C81.36,31.74,63.74,43.87,58.09,45.3c-2.41-5.37-3.61-26.52-4.37-39-.77,12.46-2,33.64-4.36,39-5.7-1.46-23.3-13.57-33.49-20.72,9.26,8.37,25.39,22.36,28,27.55C39.21,55.68,18.47,62,6.52,65.55c12.32-2,33.63-6.06,39.34-4.9-.16,5.87-8.41,26.16-13.11,37.69,6.1-10.89,16.52-30.16,21-33.9,4.5,3.79,14.93,23.09,21,34C70,86.84,61.73,66.48,61.59,60.65,67.36,59.49,88.64,63.52,100.93,65.54Z"/>
                         <circle class="cls-2" cx="53.73" cy="53.9" r="38"/>
                     </svg>
-                    <span class="serverListingStarTooltip">Main Server</span>
+                    <span class="serverListingStarTooltip fontPrimary">Main Server</span>
                 </div>` : ''}
             </div>
         </div>
@@ -1207,8 +1045,8 @@ settingsMaxRAMRange.onchange = (e) => {
 
 /**
  * Calculate common values for a ranged slider.
- * 
- * @param {Element} v The range slider to calculate against. 
+ *
+ * @param {Element} v The range slider to calculate against.
  * @returns {Object} An object with meta values for the provided ranged slider.
  */
 function calculateRangeSliderMeta(v){
@@ -1252,7 +1090,7 @@ function bindRangeSlider(){
 
                 // Distance from the beginning of the bar in pixels.
                 const diff = e.pageX - v.offsetLeft - track.offsetWidth/2
-                
+
                 // Don't move the track off the bar.
                 if(diff >= 0 && diff <= v.offsetWidth-track.offsetWidth/2){
 
@@ -1268,12 +1106,12 @@ function bindRangeSlider(){
                 }
             }
         }
-    }) 
+    })
 }
 
 /**
  * Update a ranged slider's value and position.
- * 
+ *
  * @param {Element} element The ranged slider to update.
  * @param {string | number} value The new value for the ranged slider.
  * @param {number} notch The notch that the slider should now be at.
@@ -1282,7 +1120,7 @@ function updateRangedSlider(element, value, notch){
     const oldVal = element.getAttribute('value')
     const bar = element.getElementsByClassName('rangeSliderBar')[0]
     const track = element.getElementsByClassName('rangeSliderTrack')[0]
-    
+
     element.setAttribute('value', value)
 
     if(notch < 0){
@@ -1319,7 +1157,7 @@ function populateMemoryStatus(){
 /**
  * Validate the provided executable path and display the data on
  * the UI.
- * 
+ *
  * @param {string} execPath The executable path to populate against.
  */
 function populateJavaExecDetails(execPath){
@@ -1333,7 +1171,7 @@ function populateJavaExecDetails(execPath){
                 settingsJavaExecDetails.innerHTML = `Selected: Java ${v.version.major}.${v.version.minor}.${v.version.revision} (x${v.arch})${vendor}`
             }
         } else {
-            settingsJavaExecDetails.innerHTML = 'Invalid Selection'
+            settingsJavaExecDetails.innerHTML = 'Selected: N/A'
         }
     })
 }
@@ -1350,6 +1188,7 @@ function prepareJavaTab(){
  * About Tab
  */
 
+/*
 const settingsTabAbout             = document.getElementById('settingsTabAbout')
 const settingsAboutChangelogTitle  = settingsTabAbout.getElementsByClassName('settingsChangelogTitle')[0]
 const settingsAboutChangelogText   = settingsTabAbout.getElementsByClassName('settingsChangelogText')[0]
@@ -1361,26 +1200,13 @@ document.getElementById('settingsAboutDevToolsButton').onclick = (e) => {
     window.toggleDevTools()
 }
 
-/**
- * Return whether or not the provided version is a prerelease.
- * 
- * @param {string} version The semver version to test.
- * @returns {boolean} True if the version is a prerelease, otherwise false.
- */
+
 function isPrerelease(version){
     const preRelComp = semver.prerelease(version)
     return preRelComp != null && preRelComp.length > 0
 }
 
-/**
- * Utility method to display version information on the
- * About and Update settings tabs.
- * 
- * @param {string} version The semver version to display.
- * @param {Element} valueElement The value element.
- * @param {Element} titleElement The title element.
- * @param {Element} checkElement The check mark element.
- */
+
 function populateVersionInformation(version, valueElement, titleElement, checkElement){
     valueElement.innerHTML = version
     if(isPrerelease(version)){
@@ -1394,24 +1220,18 @@ function populateVersionInformation(version, valueElement, titleElement, checkEl
     }
 }
 
-/**
- * Retrieve the version information and display it on the UI.
- */
+
 function populateAboutVersionInformation(){
     populateVersionInformation(remote.app.getVersion(), document.getElementById('settingsAboutCurrentVersionValue'), document.getElementById('settingsAboutCurrentVersionTitle'), document.getElementById('settingsAboutCurrentVersionCheck'))
 }
 
-/**
- * Fetches the GitHub atom release feed and parses it for the release notes
- * of the current version. This value is displayed on the UI.
- */
 function populateReleaseNotes(){
     $.ajax({
         url: 'https://github.com/dscalzi/HeliosLauncher/releases.atom',
         success: (data) => {
             const version = 'v' + remote.app.getVersion()
             const entries = $(data).find('entry')
-            
+
             for(let i=0; i<entries.length; i++){
                 const entry = $(entries[i])
                 let id = entry.find('id').text()
@@ -1431,9 +1251,7 @@ function populateReleaseNotes(){
     })
 }
 
-/**
- * Prepare account tab for display.
- */
+
 function prepareAboutTab(){
     populateAboutVersionInformation()
     populateReleaseNotes()
@@ -1443,6 +1261,7 @@ function prepareAboutTab(){
  * Update Tab
  */
 
+/*
 const settingsTabUpdate            = document.getElementById('settingsTabUpdate')
 const settingsUpdateTitle          = document.getElementById('settingsUpdateTitle')
 const settingsUpdateVersionCheck   = document.getElementById('settingsUpdateVersionCheck')
@@ -1453,13 +1272,7 @@ const settingsUpdateChangelogText  = settingsTabUpdate.getElementsByClassName('s
 const settingsUpdateChangelogCont  = settingsTabUpdate.getElementsByClassName('settingsChangelogContainer')[0]
 const settingsUpdateActionButton   = document.getElementById('settingsUpdateActionButton')
 
-/**
- * Update the properties of the update action button.
- * 
- * @param {string} text The new button text.
- * @param {boolean} disabled Optional. Disable or enable the button
- * @param {function} handler Optional. New button event handler.
- */
+
 function settingsUpdateButtonStatus(text, disabled = false, handler = null){
     settingsUpdateActionButton.innerHTML = text
     settingsUpdateActionButton.disabled = disabled
@@ -1468,11 +1281,7 @@ function settingsUpdateButtonStatus(text, disabled = false, handler = null){
     }
 }
 
-/**
- * Populate the update tab with relevant information.
- * 
- * @param {Object} data The update data.
- */
+
 function populateSettingsUpdateInformation(data){
     if(data != null){
         settingsUpdateTitle.innerHTML = `New ${isPrerelease(data.version) ? 'Pre-release' : 'Release'} Available`
@@ -1480,7 +1289,7 @@ function populateSettingsUpdateInformation(data){
         settingsUpdateChangelogTitle.innerHTML = data.releaseName
         settingsUpdateChangelogText.innerHTML = data.releaseNotes
         populateVersionInformation(data.version, settingsUpdateVersionValue, settingsUpdateVersionTitle, settingsUpdateVersionCheck)
-        
+
         if(process.platform === 'darwin'){
             settingsUpdateButtonStatus('Download from GitHub<span style="font-size: 10px;color: gray;text-shadow: none !important;">Close the launcher and run the dmg to update.</span>', false, () => {
                 shell.openExternal(data.darwindownload)
@@ -1501,36 +1310,26 @@ function populateSettingsUpdateInformation(data){
     }
 }
 
-/**
- * Prepare update tab for display.
- * 
- * @param {Object} data The update data.
- */
+
 function prepareUpdateTab(data = null){
     populateSettingsUpdateInformation(data)
 }
 
-/**
- * Settings preparation functions.
- */
 
-/**
-  * Prepare the entire settings UI.
-  * 
-  * @param {boolean} first Whether or not it is the first load.
-  */
+*/
+
 function prepareSettings(first = false) {
     if(first){
         setupSettingsTabs()
         initSettingsValidators()
-        prepareUpdateTab()
+        //prepareUpdateTab()
     } else {
         prepareModsTab()
     }
     initSettingsValues()
     prepareAccountsTab()
     prepareJavaTab()
-    prepareAboutTab()
+    //prepareAboutTab()
 }
 
 // Prepare the settings UI on startup.

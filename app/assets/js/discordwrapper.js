@@ -1,7 +1,7 @@
 // Work in progress
 const logger = require('./loggerutil')('%c[DiscordWrapper]', 'color: #7289da; font-weight: bold')
 
-const {Client} = require('discord-rpc-patch')
+const {Client} = require('discord-rpc')
 
 let client
 let activity
@@ -14,8 +14,8 @@ exports.initRPC = function(genSettings, servSettings, initialDetails = 'Waiting 
         state: 'Server: ' + servSettings.shortId,
         largeImageKey: servSettings.largeImageKey,
         largeImageText: servSettings.largeImageText,
-        smallImageKey: genSettings.smallImageKey,
-        smallImageText: genSettings.smallImageText,
+        //smallImageKey: genSettings.smallImageKey,
+        //smallImageText: genSettings.smallImageText,
         startTimestamp: new Date().getTime(),
         instance: false
     }
@@ -24,7 +24,7 @@ exports.initRPC = function(genSettings, servSettings, initialDetails = 'Waiting 
         logger.log('Discord RPC Connected')
         client.setActivity(activity)
     })
-    
+
     client.login({clientId: genSettings.clientId}).catch(error => {
         if(error.message.includes('ENOENT')) {
             logger.log('Unable to initialize Discord Rich Presence, no client detected.')

@@ -6,7 +6,7 @@
 
 /**
  * Check to see if the overlay is visible.
- * 
+ *
  * @returns {boolean} Whether or not the overlay is visible.
  */
 function isOverlayVisible(){
@@ -17,7 +17,7 @@ let overlayHandlerContent
 
 /**
  * Overlay keydown handler for a non-dismissable overlay.
- * 
+ *
  * @param {KeyboardEvent} e The keydown event.
  */
 function overlayKeyHandler (e){
@@ -27,7 +27,7 @@ function overlayKeyHandler (e){
 }
 /**
  * Overlay keydown handler for a dismissable overlay.
- * 
+ *
  * @param {KeyboardEvent} e The keydown event.
  */
 function overlayKeyDismissableHandler (e){
@@ -40,10 +40,10 @@ function overlayKeyDismissableHandler (e){
 
 /**
  * Bind overlay keydown listeners for escape and exit.
- * 
+ *
  * @param {boolean} state Whether or not to add new event listeners.
  * @param {string} content The overlay content which will be shown.
- * @param {boolean} dismissable Whether or not the overlay is dismissable 
+ * @param {boolean} dismissable Whether or not the overlay is dismissable
  */
 function bindOverlayKeys(state, content, dismissable){
     overlayHandlerContent = content
@@ -60,7 +60,7 @@ function bindOverlayKeys(state, content, dismissable){
 
 /**
  * Toggle the visibility of the overlay.
- * 
+ *
  * @param {boolean} toggleState True to display, false to hide.
  * @param {boolean} dismissable Optional. True to show the dismiss option, otherwise false.
  * @param {string} content Optional. The content div to be shown.
@@ -124,7 +124,7 @@ function toggleServerSelection(toggleState){
 
 /**
  * Set the content of the overlay.
- * 
+ *
  * @param {string} title Overlay title text.
  * @param {string} description Overlay description text.
  * @param {string} acknowledge Acknowledge button text.
@@ -135,13 +135,24 @@ function setOverlayContent(title, description, acknowledge, dismiss = 'Dismiss')
     document.getElementById('overlayDesc').innerHTML = description
     document.getElementById('overlayAcknowledge').innerHTML = acknowledge
     document.getElementById('overlayDismiss').innerHTML = dismiss
+
+    let discordOverlayElm = document.getElementById('overlayDiscord');
+    let folderOverlayElm = document.getElementById('overlayFolder');
+
+    if (title === "PokeLauncher Error" || title === "Download Error") {
+      if (discordOverlayElm !== undefined) discordOverlayElm.classList.remove("hidden-elm");
+      if (folderOverlayElm !== undefined) folderOverlayElm.classList.remove("hidden-elm");
+    } else {
+      if (discordOverlayElm !== undefined) discordOverlayElm.classList.add("hidden-elm");
+      if (folderOverlayElm !== undefined) folderOverlayElm.classList.add("hidden-elm");
+    }
 }
 
 /**
  * Set the onclick handler of the overlay acknowledge button.
  * If the handler is null, a default handler will be added.
- * 
- * @param {function} handler 
+ *
+ * @param {function} handler
  */
 function setOverlayHandler(handler){
     if(handler == null){
@@ -156,8 +167,8 @@ function setOverlayHandler(handler){
 /**
  * Set the onclick handler of the overlay dismiss button.
  * If the handler is null, a default handler will be added.
- * 
- * @param {function} handler 
+ *
+ * @param {function} handler
  */
 function setDismissHandler(handler){
     if(handler == null){
@@ -170,6 +181,17 @@ function setDismissHandler(handler){
 }
 
 /* Server Select View */
+//var { shell } = require('electron');
+
+document.getElementById('overlayDiscord').addEventListener('click', () => {
+  shell.openExternal('http://discord.pokeresort.com')
+})
+
+document.getElementById('overlayFolder').addEventListener('click', () => {
+  const dataFolder = ConfigManager.getDataDirectory();
+  console.log(dataFolder)
+  remote.shell.openPath(dataFolder).then((err) => console.log(err));
+})
 
 document.getElementById('serverSelectConfirm').addEventListener('click', () => {
     const listings = document.getElementsByClassName('serverListing')
@@ -197,9 +219,6 @@ document.getElementById('accountSelectConfirm').addEventListener('click', () => 
             const authAcc = ConfigManager.setSelectedAccount(listings[i].getAttribute('uuid'))
             ConfigManager.save()
             updateSelectedAccount(authAcc)
-            if(getCurrentView() === VIEWS.settings) {
-                prepareSettings()
-            }
             toggleOverlay(false)
             validateSelectedAccount()
             return
@@ -210,9 +229,6 @@ document.getElementById('accountSelectConfirm').addEventListener('click', () => 
         const authAcc = ConfigManager.setSelectedAccount(listings[0].getAttribute('uuid'))
         ConfigManager.save()
         updateSelectedAccount(authAcc)
-        if(getCurrentView() === VIEWS.settings) {
-            prepareSettings()
-        }
         toggleOverlay(false)
         validateSelectedAccount()
     }
@@ -305,7 +321,7 @@ function populateAccountListings(){
     let htmlString = ''
     for(let i=0; i<accounts.length; i++){
         htmlString += `<button class="accountListing" uuid="${accounts[i].uuid}" ${i===0 ? 'selected' : ''}>
-            <img src="https://mc-heads.net/head/${accounts[i].uuid}/40">
+            <img src="https://crafatar.com/renders/head/${accounts[i].uuid}?scale=2&default=MHF_Steve&overlay">
             <div class="accountListingName">${accounts[i].displayName}</div>
         </button>`
     }

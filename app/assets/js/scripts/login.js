@@ -17,11 +17,13 @@ const checkmarkContainer    = document.getElementById('checkmarkContainer')
 const loginRememberOption   = document.getElementById('loginRememberOption')
 const loginButton           = document.getElementById('loginButton')
 const loginForm             = document.getElementById('loginForm')
+const loginMSButton         = document.getElementById('loginMSButton')
+const logoutMSButton        = document.getElementById('logoutMSButton')
 
 // Control variables.
 let lu = false, lp = false
 
-const loggerLogin = LoggerUtil1('%c[Login]', 'color: #000668; font-weight: bold')
+const loggerLogin = LoggerUtil('%c[Login]', 'color: #000668; font-weight: bold')
 
 
 /**
@@ -154,6 +156,79 @@ function formDisabled(v){
     loginRememberOption.disabled = v
 }
 
+/**
+ * Parses an error and returns a user-friendly title and description
+ * for our error overlay.
+ * 
+ * @param {Error | {cause: string, error: string, errorMessage: string}} err A Node.js
+ * error or Mojang error response.
+ */
+function resolveError(err){
+    // Mojang Response => err.cause | err.error | err.errorMessage
+    // Node error => err.code | err.message
+    if(err.cause != null && err.cause === 'UserMigratedException') {
+        return {
+            title: Lang.queryJS('login.error.userMigrated.title'),
+            desc: Lang.queryJS('login.error.userMigrated.desc')
+        }
+    } else {
+        if(err.error != null){
+            if(err.error === 'ForbiddenOperationException'){
+                if(err.errorMessage != null){
+                    if(err.errorMessage === 'Invalid credentials. Invalid username or password.'){
+                        return {
+                            title: Lang.queryJS('login.error.invalidCredentials.title'),
+                            desc: Lang.queryJS('login.error.invalidCredentials.desc')
+                        }
+                    } else if(err.errorMessage === 'Invalid credentials.'){
+                        return {
+                            title: Lang.queryJS('login.error.rateLimit.title'),
+                            desc: Lang.queryJS('login.error.rateLimit.desc')
+                        }
+                    }
+                }
+            }
+        } else {
+            // Request errors (from Node).
+            if(err.code != null){
+                if(err.code === 'ENOENT'){
+                    // No Internet.
+                    return {
+                        title: Lang.queryJS('login.error.noInternet.title'),
+                        desc: Lang.queryJS('login.error.noInternet.desc')
+                    }
+                } else if(err.code === 'ENOTFOUND'){
+                    // Could not reach server.
+                    return {
+                        title: Lang.queryJS('login.error.authDown.title'),
+                        desc: Lang.queryJS('login.error.authDown.desc')
+                    }
+                }
+            }
+        }
+    }
+    if(err.message != null){
+        if(err.message === 'NotPaidAccount'){
+            return {
+                title: Lang.queryJS('login.error.notPaid.title'),
+                desc: Lang.queryJS('login.error.notPaid.desc')
+            }
+        } else {
+            // Unknown error with request.
+            return {
+                title: Lang.queryJS('login.error.unknown.title'),
+                desc: err.message
+            }
+        }
+    } else {
+        // Unknown Mojang error.
+        return {
+            title: err.error,
+            desc: err.errorMessage
+        }
+    }
+}
+
 let loginViewOnSuccess = VIEWS.landing
 let loginViewOnCancel = VIEWS.settings
 let loginViewCancelHandler
@@ -189,7 +264,7 @@ loginButton.addEventListener('click', () => {
     // Show loading stuff.
     loginLoading(true)
 
-    AuthManager.addMojangAccount(loginUsername.value, loginPassword.value).then((value) => {
+    AuthManager.addAccount(loginUsername.value, loginPassword.value).then((value) => {
         updateSelectedAccount(value)
         loginButton.innerHTML = loginButton.innerHTML.replace(Lang.queryJS('login.loggingIn'), Lang.queryJS('login.success'))
         $('.circle-loader').toggleClass('load-complete')
@@ -212,28 +287,91 @@ loginButton.addEventListener('click', () => {
                 formDisabled(false)
             })
         }, 1000)
-    }).catch((displayableError) => {
+    }).catch((err) => {
         loginLoading(false)
-
-        let actualDisplayableError
-        if(isDisplayableError(displayableError)) {
-            msftLoginLogger.error('Error while logging in.', displayableError)
-            actualDisplayableError = displayableError
-        } else {
-            // Uh oh.
-            msftLoginLogger.error('Unhandled error during login.', displayableError)
-            actualDisplayableError = {
-                title: 'Unknown Error During Login',
-                desc: 'An unknown error has occurred. Please see the console for details.'
-            }
-        }
-
-        setOverlayContent(actualDisplayableError.title, actualDisplayableError.desc, Lang.queryJS('login.tryAgain'))
+        const errF = resolveError(err)
+        setOverlayContent(errF.title, errF.desc, Lang.queryJS('login.tryAgain'))
         setOverlayHandler(() => {
             formDisabled(false)
             toggleOverlay(false)
         })
         toggleOverlay(true)
+        loggerLogin.log('Error while logging in.', err)
     })
 
+})
+
+let flowResponseCalled = false;
+
+loginMSButton.addEventListener('click', (event) => {
+    formDisabled(true)
+    AuthManager.addMSAccount(response => {
+        if (!flowResponseCalled) {
+            loginLoading(true)
+            flowResponseCalled = true
+            // PrismarineJS node-minecraft-protocol flow response callback
+            setOverlayContent('Authorization Code', '<h1 style="margin: 0;">' + response.userCode + '</h1><br>Press Continue and enter this code in the pop-up window!<br>Note: Office365APIEditor is used to authenticate your Microsoft account', 'Continue')
+            setOverlayHandler(() => {
+                ipcRenderer.send('openMSALoginWindow', 'open', response)
+                setOverlayContent('Authorization Code', '<h1 style="margin: 5px 0;">' + response.userCode + '</h1><br>Enter this code in the pop-up window!<br>Note: Office365APIEditor is used to authenticate your Microsoft account', 'Dismiss')
+                setOverlayHandler(() => {
+                    formDisabled(false)
+                    toggleOverlay(false)
+                })    
+            })
+            toggleOverlay(true)
+        }
+    })
+    .then(account => {
+        toggleOverlay(false)
+        updateSelectedAccount(account)
+        loginButton.innerHTML = loginButton.innerHTML.replace(Lang.queryJS('login.loggingIn'), Lang.queryJS('login.success'))
+        $('.circle-loader').toggleClass('load-complete')
+        $('.checkmark').toggle()
+        flowResponseCalled = false
+        setTimeout(() => {
+            switchView(VIEWS.login, loginViewOnSuccess, 500, 500, () => {
+                // Temporary workaround
+                if(loginViewOnSuccess === VIEWS.settings){
+                    prepareSettings()
+                }
+                loginViewOnSuccess = VIEWS.landing // Reset this for good measure.
+                loginCancelEnabled(false) // Reset this for good measure.
+                loginViewCancelHandler = null // Reset this for good measure.
+                loginUsername.value = ''
+                loginPassword.value = ''
+                $('.circle-loader').toggleClass('load-complete')
+                $('.checkmark').toggle()
+                loginLoading(false)
+                loginButton.innerHTML = loginButton.innerHTML.replace(Lang.queryJS('login.success'), Lang.queryJS('login.login'))
+                formDisabled(false)
+            })
+        }, 500)
+    })
+    .catch(error => {
+        loginLoading(false)
+        setOverlayContent('Account Error', `Failed to authenticate your Microsoft account!`, 'Cancel')
+        setOverlayHandler(() => {
+            formDisabled(false)
+            toggleOverlay(false)
+        })
+        setDismissHandler(() => {
+            toggleOverlay(false)
+        })
+        toggleOverlay(true)
+        loggerLogin.error(error)
+        flowResponseCalled = false
+    })
+}) 
+
+ipcRenderer.on('MSALoginWindowReply', (event) => {
+    toggleOverlay(false)
+})
+
+// Enter key press event
+document.addEventListener('keydown', event => {
+    if (event.key == 'Enter') {
+        event.preventDefault()
+        loginButton.click()
+    }
 })
