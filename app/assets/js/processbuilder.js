@@ -468,7 +468,7 @@ class ProcessBuilder {
                             val = this.authUser.accessToken
                             break
                         case 'user_type':
-                            val = 'mojang'
+                            val = this.authUser.type === 'microsoft' ? 'msa' : 'mojang'
                             break
                         case 'version_type':
                             val = this.versionData.type
@@ -564,10 +564,10 @@ class ProcessBuilder {
                         val = this.authUser.accessToken
                         break
                     case 'user_type':
-                        val = 'mojang'
+                        val = this.authUser.type === 'microsoft' ? 'msa' : 'mojang'
                         break
-                    case 'user_properties':
-                        val = "{}"
+                    case 'user_properties': // 1.8.9 and below.
+                        val = '{}'
                         break
                     case 'version_type':
                         val = this.versionData.type
@@ -659,7 +659,12 @@ class ProcessBuilder {
 
         // Resolve the server declared libraries.
         const servLibs = this._resolveServerLibraries(mods)
-        cpArgs = cpArgs.concat(servLibs)
+
+        // Merge libraries, server libs with the same
+        // maven identifier will override the mojang ones.
+        // Ex. 1.7.10 forge overrides mojang's guava with newer version.
+        const finalLibs = {...mojangLibs, ...servLibs}
+        cpArgs = cpArgs.concat(Object.values(finalLibs))
 
         this._processClassPathList(cpArgs)
 
@@ -673,10 +678,10 @@ class ProcessBuilder {
      * TODO - clean up function
      * 
      * @param {string} tempNativePath The path to store the native libraries.
-     * @returns {Array.<string>} An array containing the paths of each library mojang declares.
+     * @returns {{[id: string]: string}} An object containing the paths of each library mojang declares.
      */
     _resolveMojangLibraries(tempNativePath){
-        const libs = []
+        const libs = {}
 
         const libArr = this.versionData.libraries
         fs.ensureDirSync(tempNativePath)
@@ -687,7 +692,8 @@ class ProcessBuilder {
                     const dlInfo = lib.downloads
                     const artifact = dlInfo.artifact
                     const to = path.join(this.libPath, artifact.path)
-                    libs.push(to)
+                    const versionIndependentId = lib.name.substring(0, lib.name.lastIndexOf(':'))
+                    libs[versionIndependentId] = to
                 } else {
                     // Extract the native library.
                     const exclusionArr = lib.extract != null ? lib.extract.exclude : ['META-INF/']
@@ -735,7 +741,7 @@ class ProcessBuilder {
      * declare libraries.
      * 
      * @param {Array.<Object>} mods An array of enabled mods which will be launched with this process.
-     * @returns {Array.<string>} An array containing the paths of each library this server requires.
+     * @returns {{[id: string]: string}} An object containing the paths of each library this server requires.
      */
     _resolveServerLibraries(mods){
         const mdls = this.server.getModules()
@@ -745,11 +751,11 @@ class ProcessBuilder {
         for(let mdl of mdls){
             const type = mdl.getType()
             if(type === DistroManager.Types.ForgeHosted || type === DistroManager.Types.Library){
-                libs.push(mdl.getArtifact().getPath())
+                libs[mdl.getVersionlessID()] = mdl.getArtifact().getPath()
                 if(mdl.hasSubModules()){
                     const res = this._resolveModuleLibraries(mdl)
                     if(res.length > 0){
-                        libs = libs.concat(res)
+                        libs = {...libs, ...res}
                     }
                 }
             }
@@ -760,7 +766,7 @@ class ProcessBuilder {
             if(mods.sub_modules != null){
                 const res = this._resolveModuleLibraries(mods[i])
                 if(res.length > 0){
-                    libs = libs.concat(res)
+                    libs = {...libs, ...res}
                 }
             }
         }

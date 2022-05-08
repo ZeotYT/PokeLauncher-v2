@@ -5,14 +5,16 @@
  * modules, excluding dependencies.
  */
 // Requirements
-const $                                      = require('jquery')
-const {ipcRenderer, remote, shell, webFrame} = require('electron')
-const isDev                                  = require('./assets/js/isdev')
-const LoggerUtil                             = require('./assets/js/loggerutil')
+const $                              = require('jquery')
+const {ipcRenderer, shell, webFrame} = require('electron')
+const remote                         = require('@electron/remote')
+const isDev                          = require('./assets/js/isdev')
+const { LoggerUtil }                 = require('helios-core')
+const LoggerUtil1                    = require('./assets/js/loggerutil')
 
-const loggerUICore             = LoggerUtil('%c[UICore]', 'color: #000668; font-weight: bold')
-const loggerAutoUpdater        = LoggerUtil('%c[AutoUpdater]', 'color: #000668; font-weight: bold')
-const loggerAutoUpdaterSuccess = LoggerUtil('%c[AutoUpdater]', 'color: #209b07; font-weight: bold')
+const loggerUICore             = LoggerUtil1('%c[UICore]', 'color: #000668; font-weight: bold')
+const loggerAutoUpdater        = LoggerUtil1('%c[AutoUpdater]', 'color: #000668; font-weight: bold')
+const loggerAutoUpdaterSuccess = LoggerUtil1('%c[AutoUpdater]', 'color: #209b07; font-weight: bold')
 
 // Log deprecation and process warnings.
 process.traceProcessWarnings = true
@@ -26,9 +28,9 @@ window.eval = global.eval = function () {
 
 // Display warning when devtools window is opened.
 remote.getCurrentWebContents().on('devtools-opened', () => {
-    //console.log('%cThe console is dark and full of terrors.', 'color: white; -webkit-text-stroke: 4px #a02d2a; font-size: 60px; font-weight: bold')
-    //console.log('%cIf you\'ve been told to paste something here, you\'re being scammed.', 'font-size: 16px')
-    //console.log('%cUnless you know exactly what you\'re doing, close this window.', 'font-size: 16px')
+    console.log('%cThe console is dark and full of terrors.', 'color: white; -webkit-text-stroke: 4px #a02d2a; font-size: 60px; font-weight: bold')
+    console.log('%cIf you\'ve been told to paste something here, you\'re being scammed.', 'font-size: 16px')
+    console.log('%cUnless you know exactly what you\'re doing, close this window.', 'font-size: 16px')
 })
 
 // Disable zoom, needed for darwin.
@@ -213,7 +215,7 @@ $(document).on('click', 'a[href^="http"]', function(event) {
 /**
  * Opens DevTools window if you hold (ctrl + shift + i).
  * This will crash the program if you are using multiple
- * DevTools, for example the chrome debugger in VS Code.
+ * DevTools, for example the chrome debugger in VS Code. 
  */
 document.addEventListener('keydown', function (e) {
     if((e.key === 'I' || e.key === 'i') && e.ctrlKey && e.shiftKey){

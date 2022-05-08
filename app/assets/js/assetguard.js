@@ -5,6 +5,7 @@ const child_process = require('child_process')
 const crypto        = require('crypto')
 const EventEmitter  = require('events')
 const fs            = require('fs-extra')
+const StreamZip     = require('node-stream-zip')
 const path          = require('path')
 const Registry      = require('winreg')
 const request       = require('request')
@@ -196,10 +197,8 @@ class Util {
 
     static isAutoconnectBroken(forgeVersion) {
 
-        const forgeVer = forgeVersion.split('-')[1]
-
         const minWorking = [31, 2, 15]
-        const verSplit = forgeVer.split('.').map(v => Number(v))
+        const verSplit = forgeVersion.split('.').map(v => Number(v))
 
         if(verSplit[0] === 31) {
             for(let i=0; i<minWorking.length; i++) {
@@ -224,42 +223,6 @@ class JavaGuard extends EventEmitter {
         this.mcVersion = mcVersion
     }
 
-    // /**
-    //  * @typedef OracleJREData
-    //  * @property {string} uri The base uri of the JRE.
-    //  * @property {{major: string, update: string, build: string}} version Object containing version information.
-    //  */
-
-    // /**
-    //  * Resolves the latest version of Oracle's JRE and parses its download link.
-    //  *
-    //  * @returns {Promise.<OracleJREData>} Promise which resolved to an object containing the JRE download data.
-    //  */
-    // static _latestJREOracle(){
-
-    //     const url = 'https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html'
-    //     const regex = /https:\/\/.+?(?=\/java)\/java\/jdk\/([0-9]+u[0-9]+)-(b[0-9]+)\/([a-f0-9]{32})?\/jre-\1/
-
-    //     return new Promise((resolve, reject) => {
-    //         request(url, (err, resp, body) => {
-    //             if(!err){
-    //                 const arr = body.match(regex)
-    //                 const verSplit = arr[1].split('u')
-    //                 resolve({
-    //                     uri: arr[0],
-    //                     version: {
-    //                         major: verSplit[0],
-    //                         update: verSplit[1],
-    //                         build: arr[2]
-    //                     }
-    //                 })
-    //             } else {
-    //                 resolve(null)
-    //             }
-    //         })
-    //     })
-    // }
-
     /**
      * @typedef OpenJDKData
      * @property {string} uri The base uri of the JRE.
@@ -283,24 +246,36 @@ class JavaGuard extends EventEmitter {
         if(process.platform === 'darwin') {
             return this._latestCorretto(major)
         } else {
-            return this._latestAdoptOpenJDK(major)
+            return this._latestAdoptium(major)
         }
     }
 
-    static _latestAdoptOpenJDK(major) {
+    static _latestAdoptium(major) {
 
+        const majorNum = Number(major)
         const sanitizedOS = process.platform === 'win32' ? 'windows' : (process.platform === 'darwin' ? 'mac' : process.platform)
-
-        const url = `https://api.adoptopenjdk.net/v2/latestAssets/nightly/openjdk${major}?os=${sanitizedOS}&arch=x64&heap_size=normal&openjdk_impl=hotspot&type=jre`
+        const url = `https://api.adoptium.net/v3/assets/latest/${major}/hotspot?vendor=eclipse`
 
         return new Promise((resolve, reject) => {
             request({url, json: true}, (err, resp, body) => {
                 if(!err && body.length > 0){
-                    resolve({
-                        uri: body[0].binary_link,
-                        size: body[0].binary_size,
-                        name: body[0].binary_name
+
+                    const targetBinary = body.find(entry => {
+                        return entry.version.major === majorNum
+                            && entry.binary.os === sanitizedOS
+                            && entry.binary.image_type === 'jdk'
+                            && entry.binary.architecture === 'x64'
                     })
+
+                    if(targetBinary != null) {
+                        resolve({
+                            uri: targetBinary.binary.package.link,
+                            size: targetBinary.binary.package.size,
+                            name: targetBinary.binary.package.name
+                        })
+                    } else {
+                        resolve(null)
+                    }
                 } else {
                     resolve(null)
                 }
@@ -841,6 +816,7 @@ class JavaGuard extends EventEmitter {
             pathSet1 = new Set([
                 ...pathSet1,
                 ...(await JavaGuard._scanFileSystem('C:\\Program Files\\Java')),
+                ...(await JavaGuard._scanFileSystem('C:\\Program Files\\Eclipse Foundation')),
                 ...(await JavaGuard._scanFileSystem('C:\\Program Files\\AdoptOpenJDK'))
             ])
         }
@@ -878,7 +854,7 @@ class JavaGuard extends EventEmitter {
      * If versions are equal, JRE > JDK.
      *
      * @param {string} dataDir The base launcher directory.
-     * @returns {Promise.<string>} A Promise which resolves to the executable path of a valid
+     * @returns {Promise.<string>} A Promise which resolves to the executable path of a valid 
      * x64 Java installation. If none are found, null is returned.
      */
     async _darwinJavaValidate(dataDir){
@@ -923,7 +899,7 @@ class JavaGuard extends EventEmitter {
      * If versions are equal, JRE > JDK.
      *
      * @param {string} dataDir The base launcher directory.
-     * @returns {Promise.<string>} A Promise which resolves to the executable path of a valid
+     * @returns {Promise.<string>} A Promise which resolves to the executable path of a valid 
      * x64 Java installation. If none are found, null is returned.
      */
     async _linuxJavaValidate(dataDir){
@@ -966,7 +942,7 @@ class JavaGuard extends EventEmitter {
 
 /**
  * Central object class used for control flow. This object stores data about
- * categories of downloads. Each category is assigned an identifier with a
+ * categories of downloads. Each category is assigned an identifier with a 
  * DLTracker object as its value. Combined information is also stored, such as
  * the total size of all the queued files in each category. This event is used
  * to emit events so that external modules can listen into processing done in
@@ -1335,7 +1311,7 @@ class AssetGuard extends EventEmitter {
         return new Promise((resolve, reject) => {
 
             //Asset constants
-            const resourceURL = 'http://resources.download.minecraft.net/'
+            const resourceURL = 'https://resources.download.minecraft.net/'
             const localPath = path.join(self.commonPath, 'assets')
             const objectPath = path.join(localPath, 'objects')
 
@@ -1587,21 +1563,7 @@ class AssetGuard extends EventEmitter {
                     this.java = new DLTracker([jre], jre.size, (a, self) => {
                         if(verData.name.endsWith('zip')){
 
-                            const zip = new AdmZip(a.to)
-                            const pos = path.join(dataDir, zip.getEntries()[0].entryName)
-                            zip.extractAllToAsync(dataDir, true, (err) => {
-                                if(err){
-                                    console.log(err)
-                                    self.emit('complete', 'java', JavaGuard.javaExecFromRoot(pos))
-                                } else {
-                                    fs.unlink(a.to, err => {
-                                        if(err){
-                                            console.log(err)
-                                        }
-                                        self.emit('complete', 'java', JavaGuard.javaExecFromRoot(pos))
-                                    })
-                                }
-                            })
+                            this._extractJdkZip(a.to, dataDir, self)
 
                         } else {
                             // Tar.gz
@@ -1642,67 +1604,31 @@ class AssetGuard extends EventEmitter {
 
     }
 
-    // _enqueueOracleJRE(dataDir){
-    //     return new Promise((resolve, reject) => {
-    //         JavaGuard._latestJREOracle().then(verData => {
-    //             if(verData != null){
+    async _extractJdkZip(zipPath, runtimeDir, self) {
+                            
+        const zip = new StreamZip.async({
+            file: zipPath,
+            storeEntries: true
+        })
 
-    //                 const combined = verData.uri + PLATFORM_MAP[process.platform]
+        let pos = ''
+        try {
+            const entries = await zip.entries()
+            pos = path.join(runtimeDir, Object.keys(entries)[0])
 
-    //                 const opts = {
-    //                     url: combined,
-    //                     headers: {
-    //                         'Cookie': 'oraclelicense=accept-securebackup-cookie'
-    //                     }
-    //                 }
+            console.log('Extracting jdk..')
+            await zip.extract(null, runtimeDir)
+            console.log('Cleaning up..')
+            await fs.remove(zipPath)
+            console.log('Jdk extraction complete.')
 
-    //                 request.head(opts, (err, resp, body) => {
-    //                     if(err){
-    //                         resolve(false)
-    //                     } else {
-    //                         dataDir = path.join(dataDir, 'runtime', 'x64')
-    //                         const name = combined.substring(combined.lastIndexOf('/')+1)
-    //                         const fDir = path.join(dataDir, name)
-    //                         const jre = new Asset(name, null, parseInt(resp.headers['content-length']), opts, fDir)
-    //                         this.java = new DLTracker([jre], jre.size, (a, self) => {
-    //                             let h = null
-    //                             fs.createReadStream(a.to)
-    //                                 .on('error', err => console.log(err))
-    //                                 .pipe(zlib.createGunzip())
-    //                                 .on('error', err => console.log(err))
-    //                                 .pipe(tar.extract(dataDir, {
-    //                                     map: (header) => {
-    //                                         if(h == null){
-    //                                             h = header.name
-    //                                         }
-    //                                     }
-    //                                 }))
-    //                                 .on('error', err => console.log(err))
-    //                                 .on('finish', () => {
-    //                                     fs.unlink(a.to, err => {
-    //                                         if(err){
-    //                                             console.log(err)
-    //                                         }
-    //                                         if(h.indexOf('/') > -1){
-    //                                             h = h.substring(0, h.indexOf('/'))
-    //                                         }
-    //                                         const pos = path.join(dataDir, h)
-    //                                         self.emit('complete', 'java', JavaGuard.javaExecFromRoot(pos))
-    //                                     })
-    //                                 })
-
-    //                         })
-    //                         resolve(true)
-    //                     }
-    //                 })
-
-    //             } else {
-    //                 resolve(false)
-    //             }
-    //         })
-    //     })
-
-    // }
+        } catch(err) {
+            console.log(err)
+        } finally {
+            zip.close()
+            self.emit('complete', 'java', JavaGuard.javaExecFromRoot(pos))
+        }
+    }
 
     // _enqueueMojangJRE(dir){
     //     return new Promise((resolve, reject) => {
@@ -1841,13 +1767,7 @@ class AssetGuard extends EventEmitter {
                 //self.progress -= dlTracker.dlsize
                 self[identifier] = new DLTracker([], 0)
 
-                //console.log("progress test")
-                //console.log(self.progress)
-                //console.log(self.totaldlsize)
-                //console.log(this.processed)
-                //console.log(this.totalToProcess)
-
-                if(self.progress >= self.totaldlsize || (this.processed >= this.totalToProcess - 1 && self.progress > 0.9 * self.totaldlsize)) {
+                if(self.progress >= self.totaldlsize) {
                     if(self.extractQueue.length > 0){
                         self.emit('progress', 'extract', 1, 1)
                         //self.emit('extracting')

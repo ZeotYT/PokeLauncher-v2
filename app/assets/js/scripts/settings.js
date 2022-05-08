@@ -1,10 +1,10 @@
 // Requirements
-const os = require('os')
-const rimraf = require('rimraf')
+const os     = require('os')
 const semver = require('semver')
 
 const { JavaGuard } = require('./assets/js/assetguard')
 const DropinModUtil  = require('./assets/js/dropinmodutil')
+const { MSFT_OPCODE, MSFT_REPLY_TYPE, MSFT_ERROR } = require('./assets/js/ipcconstants')
 
 const settingsState = {
     invalid: new Set()
@@ -44,7 +44,7 @@ bindSettingsSelect()
 
 function bindFileSelectors(){
     for(let ele of document.getElementsByClassName('settingsFileSelButton')){
-
+        
         ele.onclick = async e => {
             const isJavaExecSel = ele.id === 'settingsJavaExecSel'
             const directoryDialog = ele.hasAttribute('dialogDirectory') && ele.getAttribute('dialogDirectory') == 'true'
@@ -86,7 +86,7 @@ bindFileSelectors()
 /**
   * Bind value validators to the settings UI elements. These will
   * validate against the criteria defined in the ConfigManager (if
-  * and). If the value is invalid, the UI will reflect this and saving
+  * any). If the value is invalid, the UI will reflect this and saving
   * will be disabled until the value is corrected. This is an automated
   * process. More complex UI may need to be bound separately.
   */
@@ -180,7 +180,11 @@ function saveSettingsValues(){
                 if(v.type === 'number' || v.type === 'text'){
                     // Special Conditions
                     if(cVal === 'JVMOptions'){
-                        sFn(v.value.split(' '))
+                        if(!v.value.trim()) {
+                            sFn([])
+                        } else {
+                            sFn(v.value.trim().split(/\s+/))
+                        }
                     } else {
                         sFn(v.value)
                     }
@@ -315,14 +319,113 @@ settingsNavDone.onclick = () => {
  * Account Management Tab
  */
 
-// Bind the add account button.
-document.getElementById('settingsAddAccount').onclick = (e) => {
+const msftLoginLogger = LoggerUtil.getLogger('Microsoft Login')
+const msftLogoutLogger = LoggerUtil.getLogger('Microsoft Logout')
+
+// Bind the add mojang account button.
+document.getElementById('settingsAddMojangAccount').onclick = (e) => {
     switchView(getCurrentView(), VIEWS.login, 500, 500, () => {
         loginViewOnCancel = VIEWS.settings
         loginViewOnSuccess = VIEWS.settings
         loginCancelEnabled(true)
     })
 }
+
+// Bind the add microsoft account button.
+document.getElementById('settingsAddMicrosoftAccount').onclick = (e) => {
+    switchView(getCurrentView(), VIEWS.waiting, 500, 500, () => {
+        ipcRenderer.send(MSFT_OPCODE.OPEN_LOGIN, VIEWS.settings, VIEWS.settings)
+    })
+}
+
+// Bind reply for Microsoft Login.
+ipcRenderer.on(MSFT_OPCODE.REPLY_LOGIN, (_, ...arguments_) => {
+    if (arguments_[0] === MSFT_REPLY_TYPE.ERROR) {
+
+        const viewOnClose = arguments_[2]
+        console.log(arguments_)
+        switchView(getCurrentView(), viewOnClose, 500, 500, () => {
+
+            if(arguments_[1] === MSFT_ERROR.NOT_FINISHED) {
+                // User cancelled.
+                msftLoginLogger.info('Login cancelled by user.')
+                return
+            }
+
+            // Unexpected error.
+            setOverlayContent(
+                'Something Went Wrong',
+                'Microsoft authentication failed. Please try again.',
+                'OK'
+            )
+            setOverlayHandler(() => {
+                toggleOverlay(false)
+            })
+            toggleOverlay(true)
+        })
+    } else if(arguments_[0] === MSFT_REPLY_TYPE.SUCCESS) {
+        const queryMap = arguments_[1]
+        const viewOnClose = arguments_[2]
+
+        // Error from request to Microsoft.
+        if (Object.prototype.hasOwnProperty.call(queryMap, 'error')) {
+            switchView(getCurrentView(), viewOnClose, 500, 500, () => {
+                // TODO Dont know what these errors are. Just show them I guess.
+                // This is probably if you messed up the app registration with Azure.
+                console.log('Error getting authCode, is Azure application registered correctly?')
+                console.log(error)
+                console.log(error_description)
+                console.log('Full query map', queryMap)
+                let error = queryMap.error // Error might be 'access_denied' ?
+                let errorDesc = queryMap.error_description
+                setOverlayContent(
+                    error,
+                    errorDesc,
+                    'OK'
+                )
+                setOverlayHandler(() => {
+                    toggleOverlay(false)
+                })
+                toggleOverlay(true)
+
+            })
+        } else {
+
+            msftLoginLogger.info('Acquired authCode, proceeding with authentication.')
+
+            const authCode = queryMap.code
+            AuthManager.addMicrosoftAccount(authCode).then(value => {
+                updateSelectedAccount(value)
+                switchView(getCurrentView(), viewOnClose, 500, 500, () => {
+                    prepareSettings()
+                })
+            })
+                .catch((displayableError) => {
+
+                    let actualDisplayableError
+                    if(isDisplayableError(displayableError)) {
+                        msftLoginLogger.error('Error while logging in.', displayableError)
+                        actualDisplayableError = displayableError
+                    } else {
+                        // Uh oh.
+                        msftLoginLogger.error('Unhandled error during login.', displayableError)
+                        actualDisplayableError = {
+                            title: 'Unknown Error During Login',
+                            desc: 'An unknown error has occurred. Please see the console for details.'
+                        }
+                    }
+
+                    switchView(getCurrentView(), viewOnClose, 500, 500, () => {
+                        setOverlayContent(actualDisplayableError.title, actualDisplayableError.desc, Lang.queryJS('login.tryAgain'))
+                        setOverlayHandler(() => {
+                            toggleOverlay(false)
+                        })
+                        toggleOverlay(true)
+                    })
+                })
+        }
+    }
+})
 
 /**
  * Bind functionality for the account selection buttons. If another account
@@ -357,17 +460,7 @@ function bindAuthAccountLogOut(){
     Array.from(document.getElementsByClassName('settingsAuthAccountLogOut')).map((val) => {
         val.onclick = (e) => {
             let isLastAccount = false
-            let uuid = val.closest('.settingsAuthAccount').getAttribute('uuid')
-            let authAccounts = ConfigManager.getAuthAccounts()
-            let isMicrosoft = false
-            let sysRoot = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Application Support' : process.env.HOME)
-            let nmpPath = path.join(sysRoot, 'PokeLauncher/nmp-cache')
-
-            if (authAccounts[uuid].type === "microsoft") {
-                isMicrosoft = true
-            }
-
-            if(Object.keys(authAccounts).length === 1){
+            if(Object.keys(ConfigManager.getAuthAccounts()).length === 1){
                 isLastAccount = true
                 setOverlayContent(
                     '<br>Last Account',
@@ -376,36 +469,22 @@ function bindAuthAccountLogOut(){
                     'Cancel'
                 )
                 setOverlayHandler(() => {
-                    if (isMicrosoft) {
-                        rimraf.sync(nmpPath)
-                    }
-                    ConfigManager.removeAuthAccount(uuid)
                     processLogOut(val, isLastAccount)
-                    
                     toggleOverlay(false)
-                    switchView(getCurrentView(), VIEWS.login)
-
-                    delete authAccounts[uuid]
-                    ConfigManager.save()
                 })
                 setDismissHandler(() => {
                     toggleOverlay(false)
                 })
                 toggleOverlay(true, true)
             } else {
-                if (isMicrosoft) {
-                    rimraf.sync(nmpPath)
-                    ConfigManager.removeAuthAccount(uuid)
-                }
-
                 processLogOut(val, isLastAccount)
-                delete authAccounts[uuid]
-                ConfigManager.save()
             }
+            
         }
     })
 }
 
+let msAccDomElementCache
 /**
  * Process a log out.
  *
@@ -416,23 +495,95 @@ function processLogOut(val, isLastAccount){
     const parent = val.closest('.settingsAuthAccount')
     const uuid = parent.getAttribute('uuid')
     const prevSelAcc = ConfigManager.getSelectedAccount()
-    AuthManager.removeAccount(uuid).then(() => {
-        if(uuid === prevSelAcc.uuid){
-            const selAcc = ConfigManager.getSelectedAccount()
-            refreshAuthAccountSelected(selAcc.uuid)
-            updateSelectedAccount(selAcc)
-            validateSelectedAccount()
-        }
-    })
-    $(parent).fadeOut(250, () => {
-        parent.remove()
-    })
+    const targetAcc = ConfigManager.getAuthAccount(uuid)
+    if(targetAcc.type === 'microsoft') {
+        msAccDomElementCache = parent
+        switchView(getCurrentView(), VIEWS.waiting, 500, 500, () => {
+            ipcRenderer.send(MSFT_OPCODE.OPEN_LOGOUT, uuid, isLastAccount)
+        })
+    } else {
+        AuthManager.removeMojangAccount(uuid).then(() => {
+            if(!isLastAccount && uuid === prevSelAcc.uuid){
+                const selAcc = ConfigManager.getSelectedAccount()
+                refreshAuthAccountSelected(selAcc.uuid)
+                updateSelectedAccount(selAcc)
+                validateSelectedAccount()
+            }
+            if(isLastAccount) {
+                loginOptionsCancelEnabled(false)
+                loginOptionsViewOnLoginSuccess = VIEWS.settings
+                loginOptionsViewOnLoginCancel = VIEWS.loginOptions
+                switchView(getCurrentView(), VIEWS.loginOptions)
+            }
+        })
+        $(parent).fadeOut(250, () => {
+            parent.remove()
+        })
+    }
 }
+
+// Bind reply for Microsoft Logout.
+ipcRenderer.on(MSFT_OPCODE.REPLY_LOGOUT, (_, ...arguments_) => {
+    if (arguments_[0] === MSFT_REPLY_TYPE.ERROR) {
+        switchView(getCurrentView(), VIEWS.settings, 500, 500, () => {
+
+            if(arguments_.length > 1 && arguments_[1] === MSFT_ERROR.NOT_FINISHED) {
+                // User cancelled.
+                msftLogoutLogger.info('Logout cancelled by user.')
+                return
+            }
+
+            // Unexpected error.
+            setOverlayContent(
+                'Something Went Wrong',
+                'Microsoft logout failed. Please try again.',
+                'OK'
+            )
+            setOverlayHandler(() => {
+                toggleOverlay(false)
+            })
+            toggleOverlay(true)
+        })
+    } else if(arguments_[0] === MSFT_REPLY_TYPE.SUCCESS) {
+        
+        const uuid = arguments_[1]
+        const isLastAccount = arguments_[2]
+        const prevSelAcc = ConfigManager.getSelectedAccount()
+
+        msftLogoutLogger.info('Logout Successful. uuid:', uuid)
+        
+        AuthManager.removeMicrosoftAccount(uuid)
+            .then(() => {
+                if(!isLastAccount && uuid === prevSelAcc.uuid){
+                    const selAcc = ConfigManager.getSelectedAccount()
+                    refreshAuthAccountSelected(selAcc.uuid)
+                    updateSelectedAccount(selAcc)
+                    validateSelectedAccount()
+                }
+                if(isLastAccount) {
+                    loginOptionsCancelEnabled(false)
+                    loginOptionsViewOnLoginSuccess = VIEWS.settings
+                    loginOptionsViewOnLoginCancel = VIEWS.loginOptions
+                    switchView(getCurrentView(), VIEWS.loginOptions)
+                }
+                if(msAccDomElementCache) {
+                    msAccDomElementCache.remove()
+                    msAccDomElementCache = null
+                }
+            })
+            .finally(() => {
+                if(!isLastAccount) {
+                    switchView(getCurrentView(), VIEWS.settings, 500, 500)
+                }
+            })
+
+    }
+})
 
 /**
  * Refreshes the status of the selected account on the auth account
  * elements.
- *
+ * 
  * @param {string} uuid The UUID of the new selected account.
  */
 function refreshAuthAccountSelected(uuid){
@@ -450,7 +601,8 @@ function refreshAuthAccountSelected(uuid){
     })
 }
 
-const settingsCurrentAccounts = document.getElementById('settingsCurrentAccounts')
+const settingsCurrentMicrosoftAccounts = document.getElementById('settingsCurrentMicrosoftAccounts')
+const settingsCurrentMojangAccounts = document.getElementById('settingsCurrentMojangAccounts')
 
 /**
  * Add auth account elements for each one stored in the authentication database.
@@ -463,13 +615,15 @@ function populateAuthAccounts(){
     }
     const selectedUUID = ConfigManager.getSelectedAccount().uuid
 
-    let authAccountStr = ''
+    let microsoftAuthAccountStr = ''
+    let mojangAuthAccountStr = ''
 
-    authKeys.map((val) => {
+    authKeys.forEach((val) => {
         const acc = authAccounts[val]
-        authAccountStr += `<div class="settingsAuthAccount" uuid="${acc.uuid}">
+
+        const accHtml = `<div class="settingsAuthAccount" uuid="${acc.uuid}">
             <div class="settingsAuthAccountLeft">
-                <img class="settingsAuthAccountImage" alt="${acc.displayName}" src="https://crafatar.com/renders/body/${acc.uuid}?scale=3&default=MHF_Steve&overlay">
+                <img class="settingsAuthAccountImage" alt="${acc.displayName}" src="https://mc-heads.net/body/${acc.uuid}/60">
             </div>
             <div class="settingsAuthAccountRight">
                 <div class="settingsAuthAccountDetails">
@@ -490,9 +644,17 @@ function populateAuthAccounts(){
                 </div>
             </div>
         </div>`
+
+        if(acc.type === 'microsoft') {
+            microsoftAuthAccountStr += accHtml
+        } else {
+            mojangAuthAccountStr += accHtml
+        }
+
     })
 
-    settingsCurrentAccounts.innerHTML = authAccountStr
+    settingsCurrentMicrosoftAccounts.innerHTML = microsoftAuthAccountStr
+    settingsCurrentMojangAccounts.innerHTML = mojangAuthAccountStr
 }
 
 /**
@@ -712,9 +874,9 @@ function resolveDropinModsForUI(){
 function bindDropinModsRemoveButton(){
     const sEls = settingsModsContainer.querySelectorAll('[remmod]')
     Array.from(sEls).map((v, index, arr) => {
-        v.onclick = () => {
+        v.onclick = async () => {
             const fullName = v.getAttribute('remmod')
-            const res = DropinModUtil.deleteDropinMod(CACHE_SETTINGS_MODS_DIR, fullName)
+            const res = await DropinModUtil.deleteDropinMod(CACHE_SETTINGS_MODS_DIR, fullName)
             if(res){
                 document.getElementById(fullName).remove()
             } else {
@@ -1200,14 +1362,27 @@ document.getElementById('settingsAboutDevToolsButton').onclick = (e) => {
     window.toggleDevTools()
 }
 
-
+/**
+ * Return whether or not the provided version is a prerelease.
+ * 
+ * @param {string} version The semver version to test.
+ * @returns {boolean} True if the version is a prerelease, otherwise false.
+ */
 function isPrerelease(version){
     const preRelComp = semver.prerelease(version)
     return preRelComp != null && preRelComp.length > 0
 }
 
-
-function populateVersionInformation(version, valueElement, titleElement, checkElement){
+/**
+ * Utility method to display version information on the
+ * About and Update settings tabs.
+ * 
+ * @param {string} version The semver version to display.
+ * @param {Element} valueElement The value element.
+ * @param {Element} titleElement The title element.
+ * @param {Element} checkElement The check mark element.
+ */
+/*function populateVersionInformation(version, valueElement, titleElement, checkElement){
     valueElement.innerHTML = version
     if(isPrerelease(version)){
         titleElement.innerHTML = 'Pre-release'
@@ -1218,14 +1393,20 @@ function populateVersionInformation(version, valueElement, titleElement, checkEl
         titleElement.style.color = null
         checkElement.style.background = null
     }
-}
+}*/
 
-
-function populateAboutVersionInformation(){
+/**
+ * Retrieve the version information and display it on the UI.
+ */
+/*function populateAboutVersionInformation(){
     populateVersionInformation(remote.app.getVersion(), document.getElementById('settingsAboutCurrentVersionValue'), document.getElementById('settingsAboutCurrentVersionTitle'), document.getElementById('settingsAboutCurrentVersionCheck'))
-}
+}*/
 
-function populateReleaseNotes(){
+/**
+ * Fetches the GitHub atom release feed and parses it for the release notes
+ * of the current version. This value is displayed on the UI.
+ */
+/*function populateReleaseNotes(){
     $.ajax({
         url: 'https://github.com/dscalzi/HeliosLauncher/releases.atom',
         success: (data) => {
@@ -1250,18 +1431,15 @@ function populateReleaseNotes(){
         settingsAboutChangelogText.innerHTML = 'Failed to load release notes.'
     })
 }
-
-
-function prepareAboutTab(){
-    populateAboutVersionInformation()
-    populateReleaseNotes()
-}
+*/
 
 /**
- * Update Tab
+ * Prepare account tab for display.
  */
-
-/*
+function prepareAboutTab(){
+}
+/**
+ * Update Tab
 const settingsTabUpdate            = document.getElementById('settingsTabUpdate')
 const settingsUpdateTitle          = document.getElementById('settingsUpdateTitle')
 const settingsUpdateVersionCheck   = document.getElementById('settingsUpdateVersionCheck')
@@ -1271,8 +1449,11 @@ const settingsUpdateChangelogTitle = settingsTabUpdate.getElementsByClassName('s
 const settingsUpdateChangelogText  = settingsTabUpdate.getElementsByClassName('settingsChangelogText')[0]
 const settingsUpdateChangelogCont  = settingsTabUpdate.getElementsByClassName('settingsChangelogContainer')[0]
 const settingsUpdateActionButton   = document.getElementById('settingsUpdateActionButton')
-
-
+ * Update the properties of the update action button.
+ * 
+ * @param {string} text The new button text.
+ * @param {boolean} disabled Optional. Disable or enable the button
+ * @param {function} handler Optional. New button event handler.
 function settingsUpdateButtonStatus(text, disabled = false, handler = null){
     settingsUpdateActionButton.innerHTML = text
     settingsUpdateActionButton.disabled = disabled
@@ -1281,6 +1462,9 @@ function settingsUpdateButtonStatus(text, disabled = false, handler = null){
     }
 }
 
+ * Populate the update tab with relevant information.
+ * 
+ * @param {Object} data The update data.
 
 function populateSettingsUpdateInformation(data){
     if(data != null){
@@ -1310,26 +1494,34 @@ function populateSettingsUpdateInformation(data){
     }
 }
 
-
+ * Prepare update tab for display.
+ * 
+ * @param {Object} data The update data.
 function prepareUpdateTab(data = null){
     populateSettingsUpdateInformation(data)
 }
+/*
 
+/**
+ * Settings preparation functions.
+ */
 
-*/
-
+/**
+  * Prepare the entire settings UI.
+  * 
+  * @param {boolean} first Whether or not it is the first load.
+  */
 function prepareSettings(first = false) {
     if(first){
         setupSettingsTabs()
         initSettingsValidators()
-        //prepareUpdateTab()
     } else {
         prepareModsTab()
     }
     initSettingsValues()
     prepareAccountsTab()
     prepareJavaTab()
-    //prepareAboutTab()
+    prepareAboutTab()
 }
 
 // Prepare the settings UI on startup.
