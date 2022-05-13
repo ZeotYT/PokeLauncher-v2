@@ -1,6 +1,6 @@
-appId: 'helioslauncher'
-productName: 'Helios Launcher'
-artifactName: '${productName}-setup-${version}.${ext}'
+appId: 'pokelauncher'
+productName: 'Poké Launcher'
+artifactName: '${appid}-setup-${version}.${ext}'
 
 copyright: 'Copyright © 2018-2022 Daniel Scalzi'
 
@@ -31,18 +31,17 @@ mac:
   target:
     - target: 'dmg'
       arch:
-        - 'x64'
-        - 'arm64'
-  artifactName: '${productName}-setup-${version}-${arch}.${ext}'
+        - 'universal'
+  artifactName: '${appid}-setup-${version}-${arch}.${ext}'
   category: 'public.app-category.games'
 
 # Linux Configuration
 linux: 
   target: 'AppImage'
-  maintainer: 'Daniel Scalzi'
-  vendor: 'Daniel Scalzi'
-  synopsis: 'Modded Minecraft Launcher'
-  description: 'Custom launcher which allows users to join modded servers. All mods, configurations, and updates are handled automatically.'
+  maintainer: 'Zeot & Daniel Scalzi'
+  vendor: 'Zeot'
+  synopsis: 'Launcher to access PokeRessort'
+  description: 'Custom launcher which allows users to join PokeRessort''s modded servers. All mods, configurations, and updates are handled automatically.'
   category: 'Game'
 
 

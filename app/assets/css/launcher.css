@@ -1017,11 +1017,11 @@ body {
 
 .waitingSpinner:before {
     transform: rotateX(60deg) rotateY(45deg) rotateZ(45deg);
-    animation: 750ms rotateBefore infinite linear reverse;
+    animation: 1.5s rotateBefore infinite linear reverse;
 }
 .waitingSpinner:after {
     transform: rotateX(240deg) rotateY(45deg) rotateZ(45deg);
-    animation: 750ms rotateAfter infinite linear;
+    animation: 1.5s rotateAfter infinite linear;
 }
 .waitingSpinner:before,
 .waitingSpinner:after {

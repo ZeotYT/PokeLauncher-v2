@@ -43,25 +43,20 @@ if(!isDev){
     ipcRenderer.on('autoUpdateNotification', (event, arg, info) => {
         switch(arg){
             case 'checking-for-update':
-            /*
-                loggerAutoUpdater.log('Checking for update..')
-                settingsUpdateButtonStatus('Checking for Updates..', true)
-                */
+                loggerAutoUpdater.log('Checking for update...')
+                settingsUpdateButtonStatus('Checking for Updates...', true)
                 break
             case 'update-available':
-            /*
                 loggerAutoUpdaterSuccess.log('New update available', info.version)
 
                 if(process.platform === 'darwin'){
-                    info.darwindownload = `https://github.com/dscalzi/HeliosLauncher/releases/download/v${info.version}/helioslauncher-setup-${info.version}.dmg`
+                    info.darwindownload = `https://github.com/ZeotYT/PokeLauncher-v2/releases/download/v${info.version}/pokelauncher-setup-${info.version}-universal.dmg`
                     showUpdateUI(info)
                 }
 
                 populateSettingsUpdateInformation(info)
-                */
                 break
             case 'update-downloaded':
-            /*
                 loggerAutoUpdaterSuccess.log('Update ' + info.version + ' ready to be installed.')
                 settingsUpdateButtonStatus('Install Now', false, () => {
                     if(!isDev){
@@ -69,21 +64,16 @@ if(!isDev){
                     }
                 })
                 showUpdateUI(info)
-                */
                 break
             case 'update-not-available':
-            /*
                 loggerAutoUpdater.log('No new update found.')
                 settingsUpdateButtonStatus('Check for Updates')
-                */
                 break
             case 'ready':
-            /*
                 updateCheckListener = setInterval(() => {
                     ipcRenderer.send('autoUpdateAction', 'checkForUpdate')
                 }, 1800000)
                 ipcRenderer.send('autoUpdateAction', 'checkForUpdate')
-                */
                 break
             case 'realerror':
                 if(info != null && info.code != null){
@@ -120,7 +110,7 @@ function showUpdateUI(info){
     //TODO Make this message a bit more informative `${info.version}`
     document.getElementById('image_seal_container').setAttribute('update', true)
     document.getElementById('image_seal_container').onclick = () => {
-        /*setOverlayContent('Update Available', 'A new update for the launcher is available. Would you like to install now?', 'Install', 'Later')
+        setOverlayContent('Update Available', 'A new update for the launcher is available. Would you like to install now?', 'Install', 'Later')
         setOverlayHandler(() => {
             if(!isDev){
                 ipcRenderer.send('autoUpdateAction', 'installUpdateNow')
@@ -132,7 +122,7 @@ function showUpdateUI(info){
         setDismissHandler(() => {
             toggleOverlay(false)
         })
-        toggleOverlay(true, true)*/
+        toggleOverlay(true, true)
         switchView(getCurrentView(), VIEWS.settings, 500, 500, () => {
             settingsNavItemListener(document.getElementById('settingsNavUpdate'), false)
         })
