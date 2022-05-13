@@ -51,7 +51,7 @@
     "type": "git",
     "url": "git+https://github.com/ZeotYT/PokeLauncher-v2.git"
   },
-  "overrides": {
+  "resolutions": {
     "@electron/universal": "1.2.1"
   }
 }
