@@ -1,6 +1,6 @@
 name: Build
 
-on: [push, workflow_dispatch]
+on: [create, workflow_dispatch]
 
 jobs:
   release:
@@ -31,5 +31,5 @@ jobs:
       - name: Build
         env:
           GH_TOKEN: ${{ secrets.github_token }}
-        run: npm run dist -- -p onTag
+        run: npm run dist -- -p always
         shell: bash
