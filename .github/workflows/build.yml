@@ -31,5 +31,5 @@ jobs:
       - name: Build
         env:
           GH_TOKEN: ${{ secrets.github_token }}
-        run: npm run dist -- --release onTag
+        run: npm run dist -- -p onTag
         shell: bash
