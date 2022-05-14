@@ -545,7 +545,7 @@ function dlAsync(login = true){
                     setLaunchPercentage(40, 100)
                     loggerLaunchSuite.log('Version data loaded.')
                     setLaunchDetails('Validating asset integrity..')
-                    break.
+                    break
                 case 'assets':
                     setLaunchPercentage(60, 100)
                     loggerLaunchSuite.log('Asset Validation Complete')
