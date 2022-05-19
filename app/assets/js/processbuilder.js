@@ -468,7 +468,7 @@ class ProcessBuilder {
                             val = this.authUser.accessToken
                             break
                         case 'user_type':
-                            val = this.authUser.type === 'microsoft' ? 'msa' : 'mojang'
+                            val = 'mojang'
                             break
                         case 'version_type':
                             val = this.versionData.type
@@ -504,7 +504,9 @@ class ProcessBuilder {
         try {
             isAutoconnectBroken = Util.isAutoconnectBroken(this.forgeData.id.split('-')[2])
         } catch(err) {
+            logger.error(err)
             logger.error('Forge version format changed.. assuming autoconnect works.')
+            logger.debug('Forge version:', this.forgeData.id)
         }
 
         if(isAutoconnectBroken) {
@@ -564,7 +566,7 @@ class ProcessBuilder {
                         val = this.authUser.accessToken
                         break
                     case 'user_type':
-                        val = this.authUser.type === 'microsoft' ? 'msa' : 'mojang'
+                        val = 'mojang'
                         break
                     case 'user_properties': // 1.8.9 and below.
                         val = '{}'
@@ -655,7 +657,6 @@ class ProcessBuilder {
 
         // Resolve the Mojang declared libraries.
         const mojangLibs = this._resolveMojangLibraries(tempNativePath)
-        cpArgs = cpArgs.concat(mojangLibs)
 
         // Resolve the server declared libraries.
         const servLibs = this._resolveServerLibraries(mods)
@@ -745,7 +746,7 @@ class ProcessBuilder {
      */
     _resolveServerLibraries(mods){
         const mdls = this.server.getModules()
-        let libs = []
+        let libs = {}
 
         // Locate Forge/Libraries
         for(let mdl of mdls){

@@ -5,11 +5,13 @@
 const cp                      = require('child_process')
 const crypto                  = require('crypto')
 const { URL }                 = require('url')
-const { MojangRestAPI, getServerStatus }     = require('helios-core/mojang')
+const { MojangRestAPI }     = require('helios-core/mojang')
+const ServerStatus            = require('./assets/js/serverstatus')
 
 // Internal Requirements
 const DiscordWrapper          = require('./assets/js/discordwrapper')
 const ProcessBuilder          = require('./assets/js/processbuilder')
+const Mojang                  = require('./assets/js/mojang')
 const { RestResponseStatus, isDisplayableError } = require('helios-core/common')
 
 // Launch Elements
@@ -157,22 +159,19 @@ server_selection_button.onclick = (e) => {
     toggleServerSelection(true)
 }
 
+
+/*
 // Update Mojang Status Color
-const refreshMojangStatuses = async function(){
+*/
+
+const refreshMojangStatuses = async function () {
     loggerLanding.log('Refreshing Mojang Statuses..')
 
     let status = 'grey'
     let tooltipEssentialHTML = ''
     let tooltipNonEssentialHTML = ''
 
-    const response = await MojangRestAPI.status()
-    let statuses
-    if(response.responseStatus === RestResponseStatus.SUCCESS) {
-        statuses = response.data
-    } else {
-        loggerLanding.warn('Unable to refresh Mojang service status.')
-        statuses = MojangRestAPI.getDefaultStatuses()
-    }
+    const statuses = await Mojang.status()
     
     greenCount = 0
     greyCount = 0
@@ -212,14 +211,15 @@ const refreshMojangStatuses = async function(){
             status = 'green'
         }
     }
-    
+
     document.getElementById('mojangStatusEssentialContainer').innerHTML = tooltipEssentialHTML
     document.getElementById('mojangStatusNonEssentialContainer').innerHTML = tooltipNonEssentialHTML
-    document.getElementById('mojang_status_icon').style.color = MojangRestAPI.statusToHex(status)
+    document.getElementById('mojang_status_icon').style.color = greenCount == statuses.length ? '#a5c325' : '#eac918'
 }
 
-const refreshServerStatus = async function(fade = false){
-    loggerLanding.log('Refreshing Server Status')
+
+const refreshServerStatus = async function (fade = false) {
+    loggerLanding.log('Refreshing server status.')
     const serv = DistroManager.getDistribution().getServer(ConfigManager.getSelectedServer())
 
     let pLabel = 'SERVER'
@@ -228,26 +228,27 @@ const refreshServerStatus = async function(fade = false){
     try {
         const serverURL = new URL('my://' + serv.getAddress())
 
-        const servStat = await getServerStatus(47, serverURL.hostname, Number(serverURL.port))
-        console.log(servStat)
-        pLabel = 'PLAYERS'
-        pVal = servStat.players.online + '/' + servStat.players.max
+        const servStat = await ServerStatus.getStatus(serverURL.hostname, serverURL.port)
+        if(servStat.online){
+            pLabel = 'PLAYERS'
+            pVal = servStat.onlinePlayers + '/' + servStat.maxPlayers
+        }
 
     } catch (err) {
         loggerLanding.warn('Unable to refresh server status, assuming offline.')
         loggerLanding.debug(err)
     }
-    if(fade){
-        $('#server_status_wrapper').fadeOut(250, () => {
+    if (fade) {
+        $('#server_status_wrapper').fadeOut(150, () => {
             document.getElementById('landingPlayerLabel').innerHTML = pLabel
             document.getElementById('player_count').innerHTML = pVal
-            $('#server_status_wrapper').fadeIn(500)
+            $('#server_status_wrapper').fadeIn(150)
         })
     } else {
         document.getElementById('landingPlayerLabel').innerHTML = pLabel
         document.getElementById('player_count').innerHTML = pVal
     }
-    
+
 }
 
 refreshMojangStatuses()
@@ -256,6 +257,8 @@ refreshMojangStatuses()
 // Set refresh rate to once every 5 minutes.
 let mojangStatusListener = setInterval(() => refreshMojangStatuses(true), 300000)
 let serverStatusListener = setInterval(() => refreshServerStatus(true), 300000)
+
+setTimeout(() => refreshMojangStatuses(), 1000) //workaround to make sure statuses are correctly shown, else its a kinda brokenap
 
 /**
  * Shows an error overlay, toggles off the launch area.

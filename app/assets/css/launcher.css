@@ -4106,8 +4106,8 @@ input:checked + .toggleSwitchSlider:before {
 .serverListing {
     border: none;
     padding: 0px;
-    width: 375px;
-    min-height: 60px;
+    width: 400px;
+    min-height: 70px;
     display: flex;
     justify-content: flex-start;
     align-items: center;
