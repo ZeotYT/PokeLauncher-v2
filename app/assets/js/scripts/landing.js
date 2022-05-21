@@ -159,12 +159,8 @@ server_selection_button.onclick = (e) => {
     toggleServerSelection(true)
 }
 
-
-/*
 // Update Mojang Status Color
-*/
-
-const refreshMojangStatuses = async function () {
+const refreshMojangStatuses = async function(){
     loggerLanding.log('Refreshing Mojang Statuses..')
 
     let status = 'grey'
@@ -211,15 +207,14 @@ const refreshMojangStatuses = async function () {
             status = 'green'
         }
     }
-
+    
     document.getElementById('mojangStatusEssentialContainer').innerHTML = tooltipEssentialHTML
     document.getElementById('mojangStatusNonEssentialContainer').innerHTML = tooltipNonEssentialHTML
     document.getElementById('mojang_status_icon').style.color = greenCount == statuses.length ? '#a5c325' : '#eac918'
 }
 
-
-const refreshServerStatus = async function (fade = false) {
-    loggerLanding.log('Refreshing server status.')
+const refreshServerStatus = async function(fade = false){
+    loggerLanding.log('Refreshing Server Status')
     const serv = DistroManager.getDistribution().getServer(ConfigManager.getSelectedServer())
 
     let pLabel = 'SERVER'
@@ -255,10 +250,10 @@ refreshMojangStatuses()
 // Server Status is refreshed in uibinder.js on distributionIndexDone.
 
 // Set refresh rate to once every 5 minutes.
-let mojangStatusListener = setInterval(() => refreshMojangStatuses(true), 300000)
-let serverStatusListener = setInterval(() => refreshServerStatus(true), 300000)
+//let mojangStatusListener = setInterval(() => refreshMojangStatuses(true), 300000)
+//let serverStatusListener = setInterval(() => refreshServerStatus(true), 300000)
 
-setTimeout(() => refreshMojangStatuses(), 1000) //workaround to make sure statuses are correctly shown, else its a kinda brokenap
+//setTimeout(() => refreshMojangStatuses(), 1000) //workaround to make sure statuses are correctly shown, else its a kinda brokenap
 
 /**
  * Shows an error overlay, toggles off the launch area.
