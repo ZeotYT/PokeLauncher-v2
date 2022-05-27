@@ -250,10 +250,10 @@ refreshMojangStatuses()
 // Server Status is refreshed in uibinder.js on distributionIndexDone.
 
 // Set refresh rate to once every 5 minutes.
-//let mojangStatusListener = setInterval(() => refreshMojangStatuses(true), 300000)
-//let serverStatusListener = setInterval(() => refreshServerStatus(true), 300000)
+let mojangStatusListener = setInterval(() => refreshMojangStatuses(true), 300000)
+let serverStatusListener = setInterval(() => refreshServerStatus(true), 300000)
 
-//setTimeout(() => refreshMojangStatuses(), 1000) //workaround to make sure statuses are correctly shown, else its a kinda brokenap
+setTimeout(() => refreshMojangStatuses(), 1000) //workaround to make sure statuses are correctly shown, else its a kinda brokenap
 
 /**
  * Shows an error overlay, toggles off the launch area.
