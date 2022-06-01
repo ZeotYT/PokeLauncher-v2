@@ -43,17 +43,17 @@ if(!isDev){
     ipcRenderer.on('autoUpdateNotification', (event, arg, info) => {
         switch(arg){
             case 'checking-for-update':
-                loggerAutoUpdater.log('Checking for update...')
-                settingsUpdateButtonStatus('Checking for Updates...', true)
+                loggerAutoUpdater.log('Checking for update..')
+                settingsUpdateButtonStatus('Checking for Updates..', true)
                 break
             case 'update-available':
                 loggerAutoUpdaterSuccess.log('New update available', info.version)
-
+                
                 if(process.platform === 'darwin'){
-                    info.darwindownload = `https://github.com/ZeotYT/PokeLauncher-v2/releases/download/v${info.version}/pokelauncher-setup-${info.version}-universal.dmg`
+                    info.darwindownload = `https://github.com/dscalzi/HeliosLauncher/releases/download/v${info.version}/Helios-Launcher-setup-${info.version}${process.arch === 'arm64' ? '-arm64' : '-x64'}.dmg`
                     showUpdateUI(info)
                 }
-
+                
                 populateSettingsUpdateInformation(info)
                 break
             case 'update-downloaded':
@@ -99,7 +99,7 @@ if(!isDev){
  * allowPrerelease. If we are running a prerelease version, then
  * this will always be set to true, regardless of the current value
  * of val.
- *
+ * 
  * @param {boolean} val The new allow prerelease value.
  */
 function changeAllowPrerelease(val){
@@ -110,6 +110,7 @@ function showUpdateUI(info){
     //TODO Make this message a bit more informative `${info.version}`
     document.getElementById('image_seal_container').setAttribute('update', true)
     document.getElementById('image_seal_container').onclick = () => {
+        console.log("click")
         /*setOverlayContent('Update Available', 'A new update for the launcher is available. Would you like to install now?', 'Install', 'Later')
         setOverlayHandler(() => {
             if(!isDev){

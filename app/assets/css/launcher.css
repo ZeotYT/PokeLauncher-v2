@@ -2999,6 +2999,7 @@ input:checked + .toggleSwitchSlider:before {
 }
 
 /* Logo container styles w/ update. */
+/* Logo container styles w/ update. */
 #image_seal_container[update]{
     cursor: pointer
 }
@@ -3007,12 +3008,12 @@ input:checked + .toggleSwitchSlider:before {
     cursor: pointer;
     position: absolute;
     content: '';
-    height: 100%;
-    width: 100%;
-    top: 0%;
-    left: 0%;
+    height: 200px;
+    width: 110px;
+    top: 50px;
+    left: 45px;
     border-radius: 50%;
-    box-shadow: 0 0 15px #43c628;
+    box-shadow: 0 0 15px #005ade;
     animation: glow-grow 4s ease-out infinite;
     background: rgba(0, 0, 0, 0.15);
 }
@@ -3032,10 +3033,10 @@ input:checked + .toggleSwitchSlider:before {
     text-align: center;
     border-radius: 4px;
     padding: 2px;
-    position: absolute;
+    position: relative;
     z-index: 1;
-    top: 115%;
-    left: -17.5px;
+    top: 10%;
+    left:50px;
     font-family: 'Avenir Medium';
     font-size: 12px;
     transition: visibility 0s linear 0.25s, opacity 0.25s ease;
@@ -3043,7 +3044,7 @@ input:checked + .toggleSwitchSlider:before {
 #updateAvailableTooltip::after {
     content: " ";
     position: absolute;
-    left: 50%;
+    left: 50px;
     bottom: 100%;
     margin-left: -5px;
     border-width: 5px;
@@ -4107,7 +4108,7 @@ input:checked + .toggleSwitchSlider:before {
     border: none;
     padding: 0px;
     width: 400px;
-    min-height: 70px;
+    min-height: 60px;
     display: flex;
     justify-content: flex-start;
     align-items: center;

@@ -368,12 +368,11 @@ ipcRenderer.on(MSFT_OPCODE.REPLY_LOGIN, (_, ...arguments_) => {
         const viewOnClose = arguments_[2]
 
         // Error from request to Microsoft.
-        if (Object.prototype.hasOwnProperty.call(queryMap, error)) {
+        if (Object.prototype.hasOwnProperty.call(queryMap, 'error')) {
             switchView(getCurrentView(), viewOnClose, 500, 500, () => {
                 // TODO Dont know what these errors are. Just show them I guess.
                 // This is probably if you messed up the app registration with Azure.
                 console.log('Error getting authCode, is Azure application registered correctly?')
-                console.log(error)
                 console.log(querymap.error_description)
                 console.log('Full query map', queryMap)
                 let error = queryMap.error // Error might be 'access_denied' ?
@@ -813,7 +812,7 @@ function saveModConfiguration() {
 function _saveModConfiguration(modConf) {
     for (let m of Object.entries(modConf)) {
         const tSwitch = settingsModsContainer.querySelectorAll(`[formod='${m[0]}']`)
-        if (!tSwitch[0].hasAttribute('dropin')) {
+        if (tSwitch[0] && !tSwitch[0].hasAttribute('dropin')) {
             if (typeof m[1] === 'boolean') {
                 modConf[m[0]] = tSwitch[0].checked
             } else {
