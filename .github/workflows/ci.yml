@@ -27,7 +27,9 @@ jobs:
       - name: Install Dependencies
         run:  npm i
         shell: bash
-
+      - name:  Install
+        if: matrix.os == 'macos-latest'
+        run: npm i dmg-license
       - name: Build
         env:
           GH_TOKEN: ${{ secrets.github_token }}
