@@ -45,10 +45,14 @@
   "devDependencies": {
     "electron": "^18.2.4",
     "electron-builder": "^23.0.3",
-    "eslint": "^8.16.0"
+    "eslint": "^8.16.0",
+    "@electron/universal": "^1.2.1"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ZeotYT/PokeLauncher-v2.git"
-  }
+  },
+  "resolutions": {
+    "@electron/universal": "^1.2.1"
+  },
 }
