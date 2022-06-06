@@ -25,11 +25,11 @@ jobs:
           python-version: 3.x
 
       - name: Install Dependencies
-        run:  npm i
+        run:  yarn
         shell: bash
       - name:  Install
         if: matrix.os == 'macos-latest'
-        run: npm i dmg-license
+        run: yarn add dmg-license
       - name: Build
         env:
           GH_TOKEN: ${{ secrets.github_token }}
