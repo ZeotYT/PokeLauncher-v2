@@ -1,4 +1,4 @@
-appId: 'pokelauncher'
+appId: 'com.pokeresort.launcher'
 productName: 'Poké Launcher'
 artifactName: '${name}-setup-${version}.${ext}'
 
