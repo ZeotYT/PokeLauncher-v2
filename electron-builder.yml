@@ -1,6 +1,6 @@
 appId: 'com.pokeresort.launcher'
 productName: 'Poké Launcher'
-artifactName: '${name}-setup-${version}.${ext}'
+artifactName: 'pokelauncher-setup-${version}.${ext}'
 
 copyright: 'Copyright © 2018-2022 Daniel Scalzi'
 
@@ -33,7 +33,7 @@ mac:
     - target: 'dmg'
       arch:
         - 'universal'
-  artifactName: '${name}-setup-${version}-${arch}.${ext}'
+  artifactName: 'pokelauncher-setup-${version}-${arch}.${ext}'
   category: 'public.app-category.games'
 
 # Linux Configuration
